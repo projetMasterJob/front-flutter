@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front_flutter/log_in_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
 
@@ -38,6 +39,10 @@ class WelcomeScreen extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () {
                           print("Se connecter");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => LogInScreen()),
+                          );
                         },
                         child: Text("Se connecter"),
                       ),
@@ -76,6 +81,5 @@ class WelcomeScreen extends StatelessWidget {
         ],
       ),
     );
-    throw UnimplementedError();
   }
 }
