@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:front_flutter/log_in_screen.dart';
+import 'package:front_flutter/sign_in_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
 
@@ -50,6 +51,10 @@ class WelcomeScreen extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () {
                           print("S'inscrire");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => SignInScreen()),
+                          );
                         },
                         child: Text("S'inscrire"),
                       ),
