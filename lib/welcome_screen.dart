@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'listChat.dart';
 
 class WelcomeScreen extends StatelessWidget {
 
@@ -37,7 +38,10 @@ class WelcomeScreen extends StatelessWidget {
                     children: [
                       ElevatedButton(
                         onPressed: () {
-                          print("Se connecter");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ChatScreen()),
+                          );
                         },
                         child: Text("Se connecter"),
                       ),
