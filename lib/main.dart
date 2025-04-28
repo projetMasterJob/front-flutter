@@ -76,6 +76,46 @@ class _MyHomePageState extends State<MyHomePage> {
     _mapController.move(_currentLocation, 15.0);
   }
 
+  // Calculer la distance entre deux points en mètres
+  double _calculateDistance(LatLng start, LatLng end) {
+    final distanceInMeters = Geolocator.distanceBetween(
+      start.latitude,
+      start.longitude,
+      end.latitude,
+      end.longitude,
+    );
+    return distanceInMeters / 1000; // Conversion en kilomètres
+  }
+
+  // Afficher le popup avec le texte de distance et le numéro du marqueur
+  void _showMarkerPopup(BuildContext context, int markerNumber, LatLng point) {
+    double distance = _calculateDistance(_currentLocation, point);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          contentPadding: EdgeInsets.all(10),
+          title: Text("Marqueur N°$markerNumber", textAlign: TextAlign.center),
+          content: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              'Distance depuis votre position : ${distance.toStringAsFixed(2)} Km',
+              textAlign: TextAlign.center,
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text("Fermer"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,6 +127,10 @@ class _MyHomePageState extends State<MyHomePage> {
         options: MapOptions(
           center: _currentLocation, // Initialisation avec la position actuelle
           zoom: 13.0,
+          onTap: (_, __) {
+            // Ferme le popup lorsqu'on tape n'importe où sur la carte
+            Navigator.of(context, rootNavigator: true).pop();
+          },
         ),
         children: [
           TileLayer(
@@ -98,22 +142,60 @@ class _MyHomePageState extends State<MyHomePage> {
               // Marqueur pour la position actuelle de l'utilisateur
               Marker(
                 point: _currentLocation,
-                builder: (ctx) => Icon(Icons.location_on, color: Colors.red),
+                builder: (ctx) => GestureDetector(
+                  onTap: () =>
+                      _showLocationPopup(context), // On tap, show the popup
+                  child: Icon(Icons.location_on, color: Colors.red),
+                ),
               ),
-              // Marqueur pour le premier point
+              // Marqueur pour le premier point avec distance
               Marker(
                 point: point1,
-                builder: (ctx) => Icon(Icons.location_on, color: Colors.blue),
+                builder: (ctx) => GestureDetector(
+                  onTap: () => _showMarkerPopup(context, 1, point1),
+                  child: Icon(Icons.location_on, color: Colors.blue),
+                ),
               ),
-              // Marqueur pour le second point
+              // Marqueur pour le second point avec distance
               Marker(
                 point: point2,
-                builder: (ctx) => Icon(Icons.location_on, color: Colors.green),
+                builder: (ctx) => GestureDetector(
+                  onTap: () => _showMarkerPopup(context, 2, point2),
+                  child: Icon(Icons.location_on, color: Colors.green),
+                ),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  // Afficher le popup avec le message "Vous êtes ici"
+  void _showLocationPopup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          contentPadding: EdgeInsets.all(10),
+          title: Text("Vous êtes ici", textAlign: TextAlign.center),
+          content: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              'Vous êtes actuellement ici à ${_currentLocation.latitude.toStringAsFixed(4)}, ${_currentLocation.longitude.toStringAsFixed(4)}.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text("Fermer"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
