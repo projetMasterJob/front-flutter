@@ -1,0 +1,26 @@
+[
+    {
+        "latitude": 43.7075,
+        "longitude": 7.2619,
+        "title": "Parc de la Colline du Château",
+        "description": "Un beau parc avec une vue panoramique de Nice."
+    },
+    {
+        "latitude": 43.7333,
+        "longitude": 7.4167,
+        "title": "Promenade des Anglais",
+        "description": "Célèbre promenade en bord de mer avec des vues magnifiques."
+    },
+    {
+        "latitude": 43.7233,
+        "longitude": 7.3967,
+        "title": "test",
+        "description": "re test."
+    },
+    {
+        "latitude": 43.61612555562637,
+        "longitude": 7.054267654825697,
+        "title": "Fortinet",
+        "description": "cordonnées de Gmaps"
+    }
+]

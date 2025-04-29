@@ -1,7 +1,33 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' as rootBundle;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+
+class Point {
+  final double latitude;
+  final double longitude;
+  final String title;
+  final String description;
+
+  Point({
+    required this.latitude,
+    required this.longitude,
+    required this.title,
+    required this.description,
+  });
+
+  factory Point.fromJson(Map<String, dynamic> json) {
+    return Point(
+      latitude: json['latitude'],
+      longitude: json['longitude'],
+      title: json['title'],
+      description: json['description'],
+    );
+  }
+}
 
 void main() {
   runApp(MyApp());
@@ -27,151 +53,80 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late MapController _mapController;
-  LatLng _currentLocation =
-      LatLng(43.7102, 7.2620); // Coordonnées de Nice par défaut
-
-  // Coordonnées pour les deux points supplémentaires à Nice
-  LatLng point1 =
-      LatLng(43.7075, 7.2619); // Point 1 - Parc de la Colline du Château
-  LatLng point2 = LatLng(43.7333, 7.4167); // Point 2 - Promenade des Anglais
+  LatLng _currentLocation = LatLng(43.7102, 7.2620);
+  bool _locationPermissionGranted = false;
+  List<Point> points = [];
+  late Timer _timer;
+  bool hasCenteredOnce = false;
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
-    _getCurrentLocation();
+    _checkLocationPermission();
   }
 
-  // Méthode pour récupérer la position actuelle de l'utilisateur
-  Future<void> _getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Vérifier si les services de localisation sont activés
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      // Si les services de localisation ne sont pas activés, retourner
-      return;
-    }
-
-    // Vérifier les permissions de localisation
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
+  Future<void> _checkLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
       permission = await Geolocator.requestPermission();
       if (permission != LocationPermission.whileInUse &&
           permission != LocationPermission.always) {
-        // Si les permissions sont refusées, retourner
+        setState(() {
+          _locationPermissionGranted = false;
+        });
         return;
       }
     }
 
-    // Obtenir la position actuelle de l'utilisateur
+    setState(() {
+      _locationPermissionGranted = true;
+    });
+
+    if (_locationPermissionGranted) {
+      _getCurrentLocation();
+      _loadPoints();
+      _startLocationUpdates();
+    }
+  }
+
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      setState(() {
+        _locationPermissionGranted = false;
+      });
+      return;
+    }
+
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
     setState(() {
       _currentLocation = LatLng(position.latitude, position.longitude);
     });
 
-    // Centrer la carte sur la position de l'utilisateur
-    _mapController.move(_currentLocation, 15.0);
+    if (!hasCenteredOnce) {
+      _mapController.move(_currentLocation, 15.0);
+      hasCenteredOnce = true;
+    }
   }
 
-  // Calculer la distance entre deux points en mètres
-  double _calculateDistance(LatLng start, LatLng end) {
-    final distanceInMeters = Geolocator.distanceBetween(
-      start.latitude,
-      start.longitude,
-      end.latitude,
-      end.longitude,
-    );
-    return distanceInMeters / 1000; // Conversion en kilomètres
+  Future<void> _loadPoints() async {
+    final String response =
+        await rootBundle.rootBundle.loadString('assets/points.json');
+    final List<dynamic> data = json.decode(response);
+    setState(() {
+      points = data.map((json) => Point.fromJson(json)).toList();
+    });
   }
 
-  // Afficher le popup avec le texte de distance et le numéro du marqueur
-  void _showMarkerPopup(BuildContext context, int markerNumber, LatLng point) {
-    double distance = _calculateDistance(_currentLocation, point);
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          contentPadding: EdgeInsets.all(10),
-          title: Text("Marqueur N°$markerNumber", textAlign: TextAlign.center),
-          content: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              'Distance depuis votre position : ${distance.toStringAsFixed(2)} Km',
-              textAlign: TextAlign.center,
-            ),
-          ),
-          actions: [
-            TextButton(
-              child: Text("Fermer"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+  void _startLocationUpdates() {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      _getCurrentLocation();
+    });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Carte centrée sur la position actuelle'),
-      ),
-      body: FlutterMap(
-        mapController: _mapController,
-        options: MapOptions(
-          center: _currentLocation, // Initialisation avec la position actuelle
-          zoom: 13.0,
-          onTap: (_, __) {
-            // Ferme le popup lorsqu'on tape n'importe où sur la carte
-            Navigator.of(context, rootNavigator: true).pop();
-          },
-        ),
-        children: [
-          TileLayer(
-            urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            subdomains: ['a', 'b', 'c'],
-          ),
-          MarkerLayer(
-            markers: [
-              // Marqueur pour la position actuelle de l'utilisateur
-              Marker(
-                point: _currentLocation,
-                builder: (ctx) => GestureDetector(
-                  onTap: () =>
-                      _showLocationPopup(context), // On tap, show the popup
-                  child: Icon(Icons.location_on, color: Colors.red),
-                ),
-              ),
-              // Marqueur pour le premier point avec distance
-              Marker(
-                point: point1,
-                builder: (ctx) => GestureDetector(
-                  onTap: () => _showMarkerPopup(context, 1, point1),
-                  child: Icon(Icons.location_on, color: Colors.blue),
-                ),
-              ),
-              // Marqueur pour le second point avec distance
-              Marker(
-                point: point2,
-                builder: (ctx) => GestureDetector(
-                  onTap: () => _showMarkerPopup(context, 2, point2),
-                  child: Icon(Icons.location_on, color: Colors.green),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Afficher le popup avec le message "Vous êtes ici"
   void _showLocationPopup(BuildContext context) {
     showDialog(
       context: context,
@@ -182,7 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
           content: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
-              'Vous êtes actuellement ici à ${_currentLocation.latitude.toStringAsFixed(4)}, ${_currentLocation.longitude.toStringAsFixed(4)}.',
+              'Profil ?',
               textAlign: TextAlign.center,
             ),
           ),
@@ -196,6 +151,97 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         );
       },
+    );
+  }
+
+  void _showMarkerPopup(BuildContext context, Point point) {
+    double distance = Geolocator.distanceBetween(
+          _currentLocation.latitude,
+          _currentLocation.longitude,
+          point.latitude,
+          point.longitude,
+        ) /
+        1000;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          contentPadding: EdgeInsets.all(10),
+          title: Text(point.title, textAlign: TextAlign.center),
+          content: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              '${point.description}\nDistance : ${distance.toStringAsFixed(2)} Km',
+              textAlign: TextAlign.center,
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text("Fermer"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Job Finder'),
+      ),
+      body: _locationPermissionGranted
+          ? FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                center: _currentLocation,
+                zoom: 13.0,
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate:
+                      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  subdomains: ['a', 'b', 'c'],
+                ),
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: _currentLocation,
+                      builder: (ctx) => GestureDetector(
+                        onTap: () => _showLocationPopup(context),
+                        child: Icon(Icons.location_on, color: Colors.red),
+                      ),
+                    ),
+                    ...points.map(
+                      (point) => Marker(
+                        point: LatLng(point.latitude, point.longitude),
+                        builder: (ctx) => GestureDetector(
+                          onTap: () => _showMarkerPopup(context, point),
+                          child: Icon(Icons.location_on, color: Colors.blue),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            )
+          : Center(
+              child: ElevatedButton(
+                onPressed: _checkLocationPermission,
+                child: Text('Activer la localisation'),
+              ),
+            ),
     );
   }
 }
