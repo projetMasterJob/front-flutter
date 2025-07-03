@@ -11,6 +11,8 @@ class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController adresseController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +66,7 @@ class _SignInScreenState extends State<SignInScreen> {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: TextField(
-                  controller: firstNameController,
+                  controller: adresseController,
                   decoration: InputDecoration(
                     labelText: 'Adresse',
                     border: OutlineInputBorder(),
@@ -77,7 +79,7 @@ class _SignInScreenState extends State<SignInScreen> {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: TextField(
-                  controller: firstNameController,
+                  controller: phoneController,
                   decoration: InputDecoration(
                     labelText: 'Numéro de téléphone',
                     border: OutlineInputBorder(),
