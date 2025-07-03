@@ -34,7 +34,7 @@ class _SignInScreenState extends State<SignInScreen> {
               // Espacement entre l'image et les champs
               SizedBox(height: 30),
 
-              // Champ email
+              // Champ nom
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: TextField(
@@ -47,7 +47,7 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
               SizedBox(height: 20),
 
-              // Champ email
+              // Champ prénom
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: TextField(
@@ -55,6 +55,33 @@ class _SignInScreenState extends State<SignInScreen> {
                   decoration: InputDecoration(
                     labelText: 'Prénom',
                     border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+
+              // Champ adresse
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: TextField(
+                  controller: firstNameController,
+                  decoration: InputDecoration(
+                    labelText: 'Adresse',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+
+              // Champ téléphone
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: TextField(
+                  controller: firstNameController,
+                  decoration: InputDecoration(
+                    labelText: 'Numéro de téléphone',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.phone),
                   ),
                 ),
               ),
