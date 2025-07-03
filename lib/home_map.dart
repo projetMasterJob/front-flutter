@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
+import 'services/location_service.dart';
 
 class HomeMapPage extends StatefulWidget {
   @override
@@ -11,7 +11,9 @@ class _HomeMapPageState extends State<HomeMapPage> {
   GoogleMapController? _mapController;
   LatLng? _currentLocation;
   bool _locationPermissionGranted = false;
+  bool _serviceEnabled = true;
   bool hasCenteredOnce = false;
+  bool _isLoading = true;
 
   static const String _mapStyleHidePOI = '''[
     { "featureType": "all", "elementType": "all", "stylers": [ { "visibility": "off" } ] },
@@ -33,38 +35,109 @@ class _HomeMapPageState extends State<HomeMapPage> {
   }
 
   Future<void> _initializeLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      setState(() => _locationPermissionGranted = false);
-      return;
-    }
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        setState(() => _locationPermissionGranted = false);
-        return;
-      }
-    }
-    if (permission == LocationPermission.deniedForever) {
-      setState(() => _locationPermissionGranted = false);
-      return;
-    }
-    setState(() => _locationPermissionGranted = true);
-    final position = await Geolocator.getCurrentPosition();
     setState(() {
-      _currentLocation = LatLng(position.latitude, position.longitude);
+      _isLoading = true;
     });
+    // Vérifie et demande la permission via LocationService
+    bool permissionGranted = await LocationService.checkAndRequestPermission();
+    if (!permissionGranted) {
+      setState(() {
+        _locationPermissionGranted = false;
+        _serviceEnabled = true;
+        _isLoading = false;
+      });
+      return;
+    }
+    // Tente de récupérer la position
+    try {
+      final position = await LocationService.getCurrentLocation();
+      setState(() {
+        _currentLocation = position;
+        _locationPermissionGranted = true;
+        _serviceEnabled = true;
+        _isLoading = false;
+      });
+    } catch (e) {
+      // Si la localisation de l'appareil est désactivée
+      setState(() {
+        _serviceEnabled = false;
+        _locationPermissionGranted = true;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _openLocationSettings() async {
+    await LocationService.openLocationSettings();
+  }
+
+  Future<void> _openAppSettings() async {
+    await LocationService.openAppSettings();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    // Cas 1 : Permission refusée (localisation non autorisée)
+    if (!_locationPermissionGranted) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.location_searching, size: 60, color: Colors.grey),
+              SizedBox(height: 16),
+              Text('Permission de localisation requise.', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 8),
+              Text('Veuillez autoriser l’accès à la localisation.'),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _openAppSettings,
+                child: Text('Ouvrir les paramètres de l’application'),
+              ),
+              SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _initializeLocation,
+                child: Text('Réessayer'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    // Cas 2 : Localisation autorisée mais désactivée sur l'appareil
+    if (!_serviceEnabled) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.location_off, size: 60, color: Colors.grey),
+              SizedBox(height: 16),
+              Text('La localisation est désactivée.', style: TextStyle(fontSize: 18)),
+              SizedBox(height: 8),
+              Text('Veuillez activer la localisation pour utiliser la carte.'),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _openLocationSettings,
+                child: Text('Activer la localisation'),
+              ),
+              SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _initializeLocation,
+                child: Text('Réessayer'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    // Cas 3 : Localisation autorisée et activée => loader ou carte
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('JobAzur', style: TextStyle(color: Color(0xFF3264E0))),
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Color(0xFF3264E0)),
-      ),
       body: _currentLocation == null
           ? const Center(child: CircularProgressIndicator())
           : GoogleMap(

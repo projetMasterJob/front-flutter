@@ -1,0 +1,44 @@
+[
+    {
+        "latitude": 43.69796505422326,
+        "longitude": 7.271396173788149,
+        "title": "Timci",
+        "description": "Située à Nice, Timci est une entreprise spécialisée dans le développement de solutions informatiques."
+    },
+    {
+        "latitude": 43.61612555562637,
+        "longitude": 7.054267654825697,
+        "title": "Fortinet",
+        "description": "Entreprise basée à Sophia Antipolis, spécialisée dans la cybersécurité."
+    },
+    {
+        "latitude": 43.695111,
+        "longitude": 7.265977,
+        "title": "Promenade des Anglais",
+        "description": "Lieu emblématique de Nice, célèbre promenade longeant la mer Méditerranée."
+    },
+    {
+        "latitude": 43.700556,
+        "longitude": 7.268222,
+        "title": "Place Masséna",
+        "description": "Place centrale de Nice, connue pour ses fontaines et son architecture."
+    },
+    {
+        "latitude": 43.720556,
+        "longitude": 7.276944,
+        "title": "Musée Matisse",
+        "description": "Musée dédié à l'œuvre du peintre Henri Matisse, situé dans le quartier de Cimiez."
+    },
+    {
+        "latitude": 43.695833,
+        "longitude": 7.279444,
+        "title": "Colline du Château",
+        "description": "Parc offrant une vue panoramique sur Nice et la Baie des Anges."
+    },
+    {
+        "latitude": 43.703056,
+        "longitude": 7.2625,
+        "title": "Cathédrale Saint-Nicolas",
+        "description": "Cathédrale orthodoxe russe, l'une des plus grandes hors de Russie."
+    }
+] 
