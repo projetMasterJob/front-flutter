@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'home_map.dart';
 
 class LogInScreen extends StatefulWidget {
   @override
@@ -68,6 +69,10 @@ class _LogInScreenState extends State<LogInScreen> {
                   onPressed: () {
                     // Ajouter ici la logique de connexion
                     print('Connexion avec ${emailController.text} et ${passwordController.text}');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomeMapPage()),
+                    );
                   },
                   child: Text('Se connecter'),
                 ),
