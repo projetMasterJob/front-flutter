@@ -5,6 +5,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'services/location_service.dart';
 import 'models/point.dart';
 import 'dart:math' show sqrt, pow;
+import 'package:flutter_compass/flutter_compass.dart';
 
 class HomeMapPage extends StatefulWidget {
   @override
@@ -20,6 +21,10 @@ class _HomeMapPageState extends State<HomeMapPage> {
   bool _isLoading = true;
   Set<Marker> _markers = {};
   List<Point> _points = [];
+  double _mapRotation = 0.0;
+  CameraPosition? _lastCameraPosition;
+  Stream<dynamic>? _compassStream;
+  bool _isCenteredOnUser = true;
 
   static const String _mapStyleHidePOI = '''[
     { "featureType": "all", "elementType": "all", "stylers": [ { "visibility": "off" } ] },
@@ -39,6 +44,33 @@ class _HomeMapPageState extends State<HomeMapPage> {
     super.initState();
     _initializeLocation();
     _loadMarkers();
+    _listenCompass();
+  }
+
+  void _listenCompass() {
+    _compassStream = FlutterCompass.events;
+    _compassStream?.listen((event) {
+      if (event.heading != null && _isCenteredOnUser) {
+        double newRotation = event.heading!;
+        if ((newRotation - _mapRotation).abs() > 2) {
+          setState(() {
+            _mapRotation = newRotation;
+          });
+          if (_mapController != null && _lastCameraPosition != null) {
+            _mapController!.animateCamera(
+              CameraUpdate.newCameraPosition(
+                CameraPosition(
+                  target: _lastCameraPosition!.target,
+                  zoom: _lastCameraPosition!.zoom,
+                  bearing: _mapRotation,
+                  tilt: _lastCameraPosition!.tilt,
+                ),
+              ),
+            );
+          }
+        }
+      }
+    });
   }
 
   Future<void> _initializeLocation() async {
@@ -287,26 +319,78 @@ class _HomeMapPageState extends State<HomeMapPage> {
     return Scaffold(
       body: _currentLocation == null
           ? const Center(child: CircularProgressIndicator())
-          : GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: _currentLocation!,
-                zoom: 17.0,
-              ),
-              onMapCreated: (controller) {
-                _mapController = controller;
-                _mapController!.setMapStyle(_mapStyleHidePOI);
-                if (!hasCenteredOnce) {
-                  _mapController!.moveCamera(CameraUpdate.newLatLngZoom(_currentLocation!, 17.0));
-                  hasCenteredOnce = true;
-                }
-              },
-              myLocationEnabled: true,
-              myLocationButtonEnabled: true,
-              compassEnabled: true,
-              rotateGesturesEnabled: true,
-              tiltGesturesEnabled: true,
-              mapType: MapType.normal,
-              markers: _markers,
+          : Stack(
+              children: [
+                GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: _currentLocation!,
+                    zoom: 17.0,
+                  ),
+                  onMapCreated: (controller) {
+                    _mapController = controller;
+                    _mapController!.setMapStyle(_mapStyleHidePOI);
+                    if (!hasCenteredOnce) {
+                      _mapController!.moveCamera(CameraUpdate.newLatLngZoom(_currentLocation!, 17.0));
+                      hasCenteredOnce = true;
+                    }
+                  },
+                  onCameraMove: (position) {
+                    _lastCameraPosition = position;
+                    if (_currentLocation != null &&
+                        (position.target.latitude - _currentLocation!.latitude).abs() > 0.0001 ||
+                        (position.target.longitude - _currentLocation!.longitude).abs() > 0.0001) {
+                      if (_isCenteredOnUser) {
+                        setState(() {
+                          _isCenteredOnUser = false;
+                        });
+                      }
+                    }
+                  },
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
+                  compassEnabled: false,
+                  rotateGesturesEnabled: true,
+                  tiltGesturesEnabled: true,
+                  mapType: MapType.normal,
+                  markers: _markers,
+                ),
+                Positioned(
+                  bottom: 102,
+                  right: 12,
+                  child: GestureDetector(
+                    onTap: () {
+                      if (_currentLocation != null && _mapController != null) {
+                        _mapController!.animateCamera(
+                          CameraUpdate.newCameraPosition(
+                            CameraPosition(
+                              target: _currentLocation!,
+                              zoom: 17.0,
+                            ),
+                          ),
+                        );
+                        setState(() {
+                          _isCenteredOnUser = true;
+                        });
+                      }
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(4),
+                        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                      ),
+                      padding: const EdgeInsets.all(10),
+                      child: Center(
+                        child: Icon(
+                          Icons.my_location,
+                          size: 18,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
     );
   }
