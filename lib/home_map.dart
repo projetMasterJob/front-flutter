@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart' show rootBundle;
 import 'services/location_service.dart';
+import 'models/point.dart';
+import 'dart:math' show sqrt, pow;
 
 class HomeMapPage extends StatefulWidget {
   @override
@@ -14,6 +18,8 @@ class _HomeMapPageState extends State<HomeMapPage> {
   bool _serviceEnabled = true;
   bool hasCenteredOnce = false;
   bool _isLoading = true;
+  Set<Marker> _markers = {};
+  List<Point> _points = [];
 
   static const String _mapStyleHidePOI = '''[
     { "featureType": "all", "elementType": "all", "stylers": [ { "visibility": "off" } ] },
@@ -32,6 +38,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
   void initState() {
     super.initState();
     _initializeLocation();
+    _loadMarkers();
   }
 
   Future<void> _initializeLocation() async {
@@ -67,6 +74,146 @@ class _HomeMapPageState extends State<HomeMapPage> {
     }
   }
 
+  Future<void> _loadMarkers() async {
+    final String data = await rootBundle.loadString('assets/points.json');
+    final List<dynamic> jsonResult = json.decode(data);
+    final List<Point> points = jsonResult.map((e) => Point.fromJson(e)).toList();
+    Set<Marker> markers = points.map((point) => Marker(
+      markerId: MarkerId(point.title),
+      position: LatLng(point.latitude, point.longitude),
+      icon: BitmapDescriptor.defaultMarker,
+      onTap: () => _showModernModal(point),
+    )).toSet();
+    setState(() {
+      _markers = markers;
+      _points = points;
+    });
+  }
+
+  void _showModernModal(Point point) {
+    double? distance;
+    if (_currentLocation != null) {
+      distance = LocationService.calculateDistance(
+        _currentLocation!,
+        LatLng(point.latitude, point.longitude),
+      );
+    }
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Stack(
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                width: double.infinity,
+                height: MediaQuery.of(context).size.height,
+                color: Colors.transparent,
+              ),
+            ),
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 16)],
+                ),
+                child: Stack(
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                point.title,
+                                style: const TextStyle(
+                                  color: Color(0xFF3264E0),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => Navigator.of(context).pop(),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  shape: BoxShape.circle,
+                                ),
+                                padding: const EdgeInsets.all(6),
+                                child: const Icon(Icons.close, size: 20, color: Colors.grey),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Center(
+                          child: Container(
+                            height: 1,
+                            width: double.infinity,
+                            margin: const EdgeInsets.symmetric(vertical: 20),
+                            color: Color(0xFFF5F5F5), // white smoke
+                          ),
+                        ),
+                        Text(
+                          point.description,
+                          style: const TextStyle(fontSize: 13, color: Colors.black87),
+                        ),
+                        const SizedBox(height: 40),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.directions_walk, size: 16, color: Color(0xFF3264E0)),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    distance != null ? "${distance.toStringAsFixed(2)} Km" : "- Km",
+                                    style: const TextStyle(
+                                      color: Color(0xFF3264E0),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {},
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF3264E0),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+                              ),
+                              child: const Text('Détails >>', style: TextStyle(fontSize: 13, color: Colors.white)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _openLocationSettings() async {
     await LocationService.openLocationSettings();
   }
@@ -93,11 +240,11 @@ class _HomeMapPageState extends State<HomeMapPage> {
               SizedBox(height: 16),
               Text('Permission de localisation requise.', style: TextStyle(fontSize: 18)),
               SizedBox(height: 8),
-              Text('Veuillez autoriser l’accès à la localisation.'),
+              Text("Veuillez autoriser l'accès à la localisation."),
               SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _openAppSettings,
-                child: Text('Ouvrir les paramètres de l’application'),
+                child: Text("Ouvrir les paramètres de l'application"),
               ),
               SizedBox(height: 12),
               ElevatedButton(
@@ -159,6 +306,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
               rotateGesturesEnabled: true,
               tiltGesturesEnabled: true,
               mapType: MapType.normal,
+              markers: _markers,
             ),
     );
   }
