@@ -3,12 +3,14 @@ class Point {
   final double longitude;
   final String title;
   final String description;
+  final String image_url;
 
   Point({
     required this.latitude,
     required this.longitude,
     required this.title,
     required this.description,
+    required this.image_url,
   });
 
   factory Point.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,7 @@ class Point {
       longitude: json['longitude'],
       title: json['title'],
       description: json['description'],
+      image_url: json['image_url'],
     );
   }
 } 

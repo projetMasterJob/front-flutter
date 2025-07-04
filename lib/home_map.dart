@@ -6,6 +6,9 @@ import 'services/location_service.dart';
 import 'models/point.dart';
 import 'dart:math' show sqrt, pow;
 import 'package:flutter_compass/flutter_compass.dart';
+import 'dart:ui' as ui;
+import 'package:http/http.dart' as http;
+import 'dart:typed_data';
 
 class HomeMapPage extends StatefulWidget {
   @override
@@ -110,16 +113,57 @@ class _HomeMapPageState extends State<HomeMapPage> {
     final String data = await rootBundle.loadString('assets/points.json');
     final List<dynamic> jsonResult = json.decode(data);
     final List<Point> points = jsonResult.map((e) => Point.fromJson(e)).toList();
-    Set<Marker> markers = points.map((point) => Marker(
-      markerId: MarkerId(point.title),
-      position: LatLng(point.latitude, point.longitude),
-      icon: BitmapDescriptor.defaultMarker,
-      onTap: () => _showModernModal(point),
-    )).toSet();
+    Set<Marker> markers = {};
+    for (final point in points) {
+      final markerIcon = await _createMarkerIconWithImage(point.image_url, size: 100);
+      markers.add(Marker(
+        markerId: MarkerId(point.title),
+        position: LatLng(point.latitude, point.longitude),
+        icon: markerIcon,
+        onTap: () => _showModernModal(point),
+      ));
+    }
     setState(() {
       _markers = markers;
       _points = points;
     });
+  }
+
+  Future<BitmapDescriptor> _createMarkerIconWithImage(String imageUrl, {double size = 100}) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final markerSize = Size(size, size);
+
+    // Fond blanc avec coins arrondis (4px)
+    final paint = Paint()..color = Colors.white;
+    final rrect = RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size, size), Radius.circular(4));
+    canvas.drawRRect(rrect, paint);
+
+    // Téléchargement de l'image
+    try {
+      final response = await http.get(Uri.parse(imageUrl));
+      if (response.statusCode == 200) {
+        final Uint8List bytes = response.bodyBytes;
+        final codec = await ui.instantiateImageCodec(bytes, targetWidth: size.toInt(), targetHeight: size.toInt());
+        final frame = await codec.getNextFrame();
+        final image = frame.image;
+
+        // Dessine l'image sur le canvas (recouvre tout le carré)
+        paintImage(
+          canvas: canvas,
+          rect: Rect.fromLTWH(0, 0, size, size),
+          image: image,
+          fit: BoxFit.cover,
+        );
+      }
+    } catch (e) {
+      // En cas d'erreur, le marker reste blanc
+    }
+
+    final picture = recorder.endRecording();
+    final img = await picture.toImage(markerSize.width.toInt(), markerSize.height.toInt());
+    final data = await img.toByteData(format: ui.ImageByteFormat.png);
+    return BitmapDescriptor.fromBytes(data!.buffer.asUint8List());
   }
 
   void _showModernModal(Point point) {
@@ -394,4 +438,80 @@ class _HomeMapPageState extends State<HomeMapPage> {
             ),
     );
   }
+}
+
+class MarkerCustom extends StatelessWidget {
+  final String title;
+  final double size;
+  const MarkerCustom({required this.title, this.size = 100});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 4, left: 4, right: 4),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Text(
+            title.isNotEmpty ? title[0] : '',
+            style: const TextStyle(
+              color: Color(0xFF3264E0),
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+            maxLines: 1,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MarkerCustomPainter extends CustomPainter {
+  final String title;
+  final double size;
+  _MarkerCustomPainter(this.title, {this.size = 100});
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size, size),
+      Radius.circular(12),
+    );
+    canvas.drawRRect(rrect, paint);
+    final shadowPaint = Paint()
+      ..color = Colors.black12
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4);
+    canvas.drawRRect(rrect.shift(const Offset(2, 2)), shadowPaint);
+    final textSpan = TextSpan(
+      text: title.isNotEmpty ? title[0] : '',
+      style: const TextStyle(
+        color: Color(0xFF3264E0),
+        fontWeight: FontWeight.bold,
+        fontSize: 20,
+      ),
+    );
+    final tp = TextPainter(
+      text: textSpan,
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    );
+    tp.layout(maxWidth: size - 8);
+    tp.paint(canvas, Offset((size - tp.width) / 2, 8));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

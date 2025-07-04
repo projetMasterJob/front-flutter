@@ -1,44 +1,23 @@
 [
     {
-        "latitude": 43.69796505422326,
-        "longitude": 7.271396173788149,
-        "title": "Timci",
-        "description": "Située à Nice, Timci est une entreprise spécialisée dans le développement de solutions informatiques."
-    },
-    {
-        "latitude": 43.61612555562637,
-        "longitude": 7.054267654825697,
-        "title": "Fortinet",
-        "description": "Entreprise basée à Sophia Antipolis, spécialisée dans la cybersécurité."
-    },
-    {
-        "latitude": 43.695111,
-        "longitude": 7.265977,
-        "title": "Promenade des Anglais",
-        "description": "Lieu emblématique de Nice, célèbre promenade longeant la mer Méditerranée."
-    },
-    {
         "latitude": 43.700556,
         "longitude": 7.268222,
-        "title": "Place Masséna",
-        "description": "Place centrale de Nice, connue pour ses fontaines et son architecture."
+        "title": "Azur Intérim",
+        "description": "Entreprise créée pour la recherche d'intérim dans le 06.",
+        "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2jvZd2kcV73UAduysWBGYsT_Ue59_gLJdQg&s"
     },
     {
         "latitude": 43.720556,
         "longitude": 7.276944,
-        "title": "Musée Matisse",
-        "description": "Musée dédié à l'œuvre du peintre Henri Matisse, situé dans le quartier de Cimiez."
+        "title": "France travail",
+        "description": "Agence de France travail Nice nord, spécialiste dans la recherche d'emploi pour un avenir meilleur.",
+        "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4yakLyeIfmMfyRbZI-eQ_3t67fvj1G2VPkQ&s"
     },
     {
         "latitude": 43.695833,
         "longitude": 7.279444,
-        "title": "Colline du Château",
-        "description": "Parc offrant une vue panoramique sur Nice et la Baie des Anges."
-    },
-    {
-        "latitude": 43.703056,
-        "longitude": 7.2625,
-        "title": "Cathédrale Saint-Nicolas",
-        "description": "Cathédrale orthodoxe russe, l'une des plus grandes hors de Russie."
+        "title": "Proman Intérim",
+        "description": "Agence d'intérim dans le département des Alpes Maritimes, votre avenir est notre priorité.",
+        "image_url": "https://levillagedesrecruteurs.fr/wp-content/uploads/gravity_forms/19-bf0649d5b725f4f2783391d3505e4d13/2022/05/logo-proman.jpg"
     }
 ] 
