@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'services/location_service.dart';
 import 'models/point.dart';
-import 'dart:math' show sqrt, pow;
 import 'package:flutter_compass/flutter_compass.dart';
 import 'dart:ui' as ui;
 import 'package:http/http.dart' as http;
@@ -28,6 +27,15 @@ class _HomeMapPageState extends State<HomeMapPage> {
   CameraPosition? _lastCameraPosition;
   Stream<dynamic>? _compassStream;
   bool _isCenteredOnUser = true;
+  bool _showSearchHereButton = false;
+  CameraPosition? _lastIdleCameraPosition;
+  
+  // Variables pour suivre la position d'origine et le déplacement
+  LatLng? _originalLocation;
+  static const double _displacementThreshold = 0.5; // Distance en km pour déclencher le bouton
+  
+  // Variable pour gérer l'état de chargement du bouton
+  bool _isSearchButtonLoading = false;
 
   static const String _mapStyleHidePOI = '''[
     { "featureType": "all", "elementType": "all", "stylers": [ { "visibility": "off" } ] },
@@ -46,7 +54,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
   void initState() {
     super.initState();
     _initializeLocation();
-    _loadMarkers();
     _listenCompass();
   }
 
@@ -95,6 +102,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
       final position = await LocationService.getCurrentLocation();
       setState(() {
         _currentLocation = position;
+        _originalLocation = position; // Définir la position d'origine
         _locationPermissionGranted = true;
         _serviceEnabled = true;
         _isLoading = false;
@@ -109,24 +117,161 @@ class _HomeMapPageState extends State<HomeMapPage> {
     }
   }
 
-  Future<void> _loadMarkers() async {
-    final String data = await rootBundle.loadString('assets/points.json');
-    final List<dynamic> jsonResult = json.decode(data);
-    final List<Point> points = jsonResult.map((e) => Point.fromJson(e)).toList();
-    Set<Marker> markers = {};
-    for (final point in points) {
-      final markerIcon = await _createMarkerIconWithImage(point.image_url, size: 100);
-      markers.add(Marker(
-        markerId: MarkerId(point.title),
-        position: LatLng(point.latitude, point.longitude),
-        icon: markerIcon,
-        onTap: () => _showModernModal(point),
-      ));
+  // Fonction pour calculer si l'utilisateur s'est suffisamment éloigné
+  bool _shouldShowSearchButton(LatLng currentPosition, double currentZoom) {
+    if (_originalLocation == null) return false;
+    
+    // Calculer la distance entre la position actuelle et l'origine
+    double distance = LocationService.calculateDistance(_originalLocation!, currentPosition);
+    
+    // Ajuster le seuil en fonction du zoom
+    // Plus le zoom est élevé, plus le seuil est petit (zone plus précise)
+    double adjustedThreshold = _displacementThreshold;
+    if (currentZoom > 15) {
+      adjustedThreshold = 0.2; // Zone très précise
+    } else if (currentZoom > 12) {
+      adjustedThreshold = 0.5; // Zone moyenne
+    } else {
+      adjustedThreshold = 1.0; // Zone large
     }
+    
+
+    
+    return distance > adjustedThreshold;
+  }
+
+  Future<void> _loadMarkersFromApi({required double centerLat, required double centerLng, required double zoom, double radiusKm = 5.0}) async {
     setState(() {
-      _markers = markers;
-      _points = points;
+      _isLoading = true;
+      _showSearchHereButton = false;
     });
+    
+    final url = Uri.parse('http://192.168.1.8:5001/map/entities?center_lat=$centerLat&center_lng=$centerLng&zoom_level=$zoom&radius_km=$radiusKm');
+    
+    try {
+      final response = await http.get(url);
+              if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          final List<dynamic> companies = data['companies'] ?? [];
+          final List<dynamic> jobs = data['jobs'] ?? [];
+        final List<Point> points = [
+          ...companies.map((e) => Point(
+            latitude: e['location'] != null ? e['location']['latitude'] : 0.0,
+            longitude: e['location'] != null ? e['location']['longitude'] : 0.0,
+            title: e['name'],
+            description: e['description'],
+            image_url: e['image_url'] ?? '',
+          )),
+          ...jobs.map((e) => Point(
+            latitude: e['location'] != null ? e['location']['latitude'] : 0.0,
+            longitude: e['location'] != null ? e['location']['longitude'] : 0.0,
+            title: e['title'],
+            description: e['description'],
+            image_url: e['image_url'] ?? '',
+          )),
+        ]
+        // On filtre les points invalides
+        .where((p) => p.latitude != 0.0 && p.longitude != 0.0)
+        .toList();
+        Set<Marker> markers = {};
+        for (final point in points) {
+          final markerIcon = await _createMarkerIconWithImage(point.image_url, size: 100);
+          markers.add(Marker(
+            markerId: MarkerId(point.title),
+            position: LatLng(point.latitude, point.longitude),
+            icon: markerIcon,
+            onTap: () => _showModernModal(point),
+          ));
+        }
+        setState(() {
+          _markers = markers;
+          _points = points;
+          _isLoading = false;
+          // Ne pas forcer l'affichage du bouton si pas de résultats
+          // Le bouton s'affichera seulement si l'utilisateur s'est éloigné
+        });
+              } else {
+          setState(() {
+            _markers = {};
+            _points = [];
+            _isLoading = false;
+            // Ne pas forcer l'affichage du bouton en cas d'erreur
+          });
+        }
+          } catch (e) {
+        setState(() {
+          _markers = {};
+          _points = [];
+          _isLoading = false;
+          // Ne pas forcer l'affichage du bouton en cas d'exception
+        });
+      }
+  }
+
+  // Nouvelle fonction pour charger seulement les points sans rafraîchir la carte
+  Future<void> _loadPointsOnly({required double centerLat, required double centerLng, required double zoom, double radiusKm = 5.0}) async {
+    // Activer l'état de chargement du bouton
+    setState(() {
+      _isSearchButtonLoading = true;
+    });
+    
+    final url = Uri.parse('http://192.168.1.8:5001/map/entities?center_lat=$centerLat&center_lng=$centerLng&zoom_level=$zoom&radius_km=$radiusKm');
+    
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List<dynamic> companies = data['companies'] ?? [];
+        final List<dynamic> jobs = data['jobs'] ?? [];
+        final List<Point> points = [
+          ...companies.map((e) => Point(
+            latitude: e['location'] != null ? e['location']['latitude'] : 0.0,
+            longitude: e['location'] != null ? e['location']['longitude'] : 0.0,
+            title: e['name'],
+            description: e['description'],
+            image_url: e['image_url'] ?? '',
+          )),
+          ...jobs.map((e) => Point(
+            latitude: e['location'] != null ? e['location']['latitude'] : 0.0,
+            longitude: e['location'] != null ? e['location']['longitude'] : 0.0,
+            title: e['title'],
+            description: e['description'],
+            image_url: e['image_url'] ?? '',
+          )),
+        ]
+        .where((p) => p.latitude != 0.0 && p.longitude != 0.0)
+        .toList();
+        
+        Set<Marker> markers = {};
+        for (final point in points) {
+          final markerIcon = await _createMarkerIconWithImage(point.image_url, size: 100);
+          markers.add(Marker(
+            markerId: MarkerId(point.title),
+            position: LatLng(point.latitude, point.longitude),
+            icon: markerIcon,
+            onTap: () => _showModernModal(point),
+          ));
+        }
+        
+        setState(() {
+          _markers = markers;
+          _points = points;
+          _isSearchButtonLoading = false; // Désactiver le loader
+        });
+      } else {
+        setState(() {
+          _markers = {};
+          _points = [];
+          _isSearchButtonLoading = false; // Désactiver le loader
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _markers = {};
+        _points = [];
+        _isSearchButtonLoading = false; // Désactiver le loader
+      });
+    }
   }
 
   Future<BitmapDescriptor> _createMarkerIconWithImage(String imageUrl, {double size = 100}) async {
@@ -142,20 +287,20 @@ class _HomeMapPageState extends State<HomeMapPage> {
     // Téléchargement de l'image
     try {
       final response = await http.get(Uri.parse(imageUrl));
-      if (response.statusCode == 200) {
-        final Uint8List bytes = response.bodyBytes;
-        final codec = await ui.instantiateImageCodec(bytes, targetWidth: size.toInt(), targetHeight: size.toInt());
-        final frame = await codec.getNextFrame();
-        final image = frame.image;
+              if (response.statusCode == 200) {
+          final Uint8List bytes = response.bodyBytes;
+          final codec = await ui.instantiateImageCodec(bytes, targetWidth: size.toInt(), targetHeight: size.toInt());
+          final frame = await codec.getNextFrame();
+          final image = frame.image;
 
-        // Dessine l'image sur le canvas (recouvre tout le carré)
-        paintImage(
-          canvas: canvas,
-          rect: Rect.fromLTWH(0, 0, size, size),
-          image: image,
-          fit: BoxFit.cover,
-        );
-      }
+          // Dessine l'image sur le canvas (recouvre tout le carré)
+          paintImage(
+            canvas: canvas,
+            rect: Rect.fromLTWH(0, 0, size, size),
+            image: image,
+            fit: BoxFit.cover,
+          );
+        }
     } catch (e) {
       // En cas d'erreur, le marker reste blanc
     }
@@ -298,6 +443,17 @@ class _HomeMapPageState extends State<HomeMapPage> {
     await LocationService.openAppSettings();
   }
 
+  void _onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
+    _mapController!.setMapStyle(_mapStyleHidePOI);
+    if (!hasCenteredOnce && _currentLocation != null) {
+      _mapController!.moveCamera(CameraUpdate.newLatLngZoom(_currentLocation!, 12.0));
+      hasCenteredOnce = true;
+      // Charger les points pour la position initiale avec un zoom cohérent
+      _loadMarkersFromApi(centerLat: _currentLocation!.latitude, centerLng: _currentLocation!.longitude, zoom: 12.0);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -361,7 +517,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
     }
     // Cas 3 : Localisation autorisée et activée => loader ou carte
     return Scaffold(
-      body: _currentLocation == null
+      body: (_currentLocation == null || _isLoading)
           ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
@@ -370,24 +526,21 @@ class _HomeMapPageState extends State<HomeMapPage> {
                     target: _currentLocation!,
                     zoom: 17.0,
                   ),
-                  onMapCreated: (controller) {
-                    _mapController = controller;
-                    _mapController!.setMapStyle(_mapStyleHidePOI);
-                    if (!hasCenteredOnce) {
-                      _mapController!.moveCamera(CameraUpdate.newLatLngZoom(_currentLocation!, 17.0));
-                      hasCenteredOnce = true;
-                    }
-                  },
+                  onMapCreated: _onMapCreated,
                   onCameraMove: (position) {
                     _lastCameraPosition = position;
-                    if (_currentLocation != null &&
-                        (position.target.latitude - _currentLocation!.latitude).abs() > 0.0001 ||
-                        (position.target.longitude - _currentLocation!.longitude).abs() > 0.0001) {
-                      if (_isCenteredOnUser) {
-                        setState(() {
-                          _isCenteredOnUser = false;
-                        });
-                      }
+                  },
+                  onCameraIdle: () {
+                    if (_lastCameraPosition != null) {
+                      _lastIdleCameraPosition = _lastCameraPosition;
+                      // Vérifier si l'utilisateur s'est suffisamment éloigné
+                      bool shouldShow = _shouldShowSearchButton(
+                        _lastCameraPosition!.target,
+                        _lastCameraPosition!.zoom
+                      );
+                      setState(() {
+                        _showSearchHereButton = shouldShow;
+                      });
                     }
                   },
                   myLocationEnabled: true,
@@ -398,6 +551,54 @@ class _HomeMapPageState extends State<HomeMapPage> {
                   mapType: MapType.normal,
                   markers: _markers,
                 ),
+                if (_showSearchHereButton)
+                  Positioned(
+                    top: 10,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF7EC8E3),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                          elevation: 2,
+                        ),
+                        onPressed: _isSearchButtonLoading ? null : () {
+                          if (_lastIdleCameraPosition != null) {
+                            final lat = _lastIdleCameraPosition!.target.latitude;
+                            final lng = _lastIdleCameraPosition!.target.longitude;
+                            final zoom = _lastIdleCameraPosition!.zoom;
+                            // Charger seulement les points sans rafraîchir la carte
+                            _loadPointsOnly(
+                              centerLat: lat,
+                              centerLng: lng,
+                              zoom: zoom,
+                            );
+                          }
+                        },
+                        child: _isSearchButtonLoading 
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Text('Recherche...', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              ],
+                            )
+                          : Text('Rechercher ici', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ),
                 Positioned(
                   bottom: 102,
                   right: 12,
@@ -414,6 +615,12 @@ class _HomeMapPageState extends State<HomeMapPage> {
                         );
                         setState(() {
                           _isCenteredOnUser = true;
+                          // Réinitialiser la position d'origine quand l'utilisateur revient à sa position
+                          if (_currentLocation != null) {
+                            _originalLocation = _currentLocation;
+                          }
+                          // Masquer le bouton de recherche quand on revient à la position d'origine
+                          _showSearchHereButton = false;
                         });
                       }
                     },
@@ -438,80 +645,4 @@ class _HomeMapPageState extends State<HomeMapPage> {
             ),
     );
   }
-}
-
-class MarkerCustom extends StatelessWidget {
-  final String title;
-  final double size;
-  const MarkerCustom({required this.title, this.size = 100});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(top: 4, left: 4, right: 4),
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: Text(
-            title.isNotEmpty ? title[0] : '',
-            style: const TextStyle(
-              color: Color(0xFF3264E0),
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
-            maxLines: 1,
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MarkerCustomPainter extends CustomPainter {
-  final String title;
-  final double size;
-  _MarkerCustomPainter(this.title, {this.size = 100});
-
-  @override
-  void paint(Canvas canvas, Size s) {
-    final paint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, 0, size, size),
-      Radius.circular(12),
-    );
-    canvas.drawRRect(rrect, paint);
-    final shadowPaint = Paint()
-      ..color = Colors.black12
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4);
-    canvas.drawRRect(rrect.shift(const Offset(2, 2)), shadowPaint);
-    final textSpan = TextSpan(
-      text: title.isNotEmpty ? title[0] : '',
-      style: const TextStyle(
-        color: Color(0xFF3264E0),
-        fontWeight: FontWeight.bold,
-        fontSize: 20,
-      ),
-    );
-    final tp = TextPainter(
-      text: textSpan,
-      textAlign: TextAlign.center,
-      textDirection: TextDirection.ltr,
-      maxLines: 1,
-    );
-    tp.layout(maxWidth: size - 8);
-    tp.paint(canvas, Offset((size - tp.width) / 2, 8));
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
