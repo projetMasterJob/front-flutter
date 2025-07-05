@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'home_map.dart';
 import 'home_list.dart';
 
+enum ListSortOption {
+  nameAZ,
+  nameZA,
+  distanceAsc,
+  distanceDesc,
+}
+
 class HomeTabPage extends StatefulWidget {
   @override
   State<HomeTabPage> createState() => _HomeTabPageState();
@@ -9,7 +16,51 @@ class HomeTabPage extends StatefulWidget {
 
 class _HomeTabPageState extends State<HomeTabPage> {
   int _selectedIndex = 0;
-  final List<Widget> _pages = [HomeMapPage(), HomeListPage()];
+  String _search = '';
+  ListSortOption _sort = ListSortOption.nameAZ;
+
+  void _showSortModal() async {
+    final result = await showModalBottomSheet<ListSortOption>(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text('Nom A-Z', style: TextStyle(color: _sort == ListSortOption.nameAZ ? Color(0xFF3264E0) : null)),
+                onTap: () => Navigator.pop(context, ListSortOption.nameAZ),
+                selected: _sort == ListSortOption.nameAZ,
+              ),
+              ListTile(
+                title: Text('Nom Z-A', style: TextStyle(color: _sort == ListSortOption.nameZA ? Color(0xFF3264E0) : null)),
+                onTap: () => Navigator.pop(context, ListSortOption.nameZA),
+                selected: _sort == ListSortOption.nameZA,
+              ),
+              ListTile(
+                title: Text('Distance croissante', style: TextStyle(color: _sort == ListSortOption.distanceAsc ? Color(0xFF3264E0) : null)),
+                onTap: () => Navigator.pop(context, ListSortOption.distanceAsc),
+                selected: _sort == ListSortOption.distanceAsc,
+              ),
+              ListTile(
+                title: Text('Distance décroissante', style: TextStyle(color: _sort == ListSortOption.distanceDesc ? Color(0xFF3264E0) : null)),
+                onTap: () => Navigator.pop(context, ListSortOption.distanceDesc),
+                selected: _sort == ListSortOption.distanceDesc,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (result != null && result != _sort) {
+      setState(() {
+        _sort = result;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +85,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
                     SizedBox(width: 8),
                     Expanded(
                       child: TextField(
+                        onChanged: (v) => setState(() => _search = v),
                         decoration: InputDecoration(
                           hintText: 'Rechercher...',
                           border: InputBorder.none,
@@ -41,6 +93,14 @@ class _HomeTabPageState extends State<HomeTabPage> {
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
+                    if (_selectedIndex == 1) // Onglet Liste
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: IconButton(
+                          icon: Icon(Icons.tune, color: Colors.grey[600]),
+                          onPressed: _showSortModal,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -64,7 +124,13 @@ class _HomeTabPageState extends State<HomeTabPage> {
               ),
             ),
             Expanded(
-              child: _pages[_selectedIndex],
+              child: IndexedStack(
+                index: _selectedIndex,
+                children: [
+                  HomeMapPage(),
+                  HomeListPage(search: _search, sort: _sort),
+                ],
+              ),
             ),
           ],
         ),
