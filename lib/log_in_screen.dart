@@ -9,6 +9,55 @@ class _LogInScreenState extends State<LogInScreen> {
   // Controllers pour gérer les champs de texte
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> loginUser(String email, String password) async {
+    setState(() { _isLoading = true; });
+    final url = Uri.parse('https://3e75-2001-861-44c2-15b0-8507-f178-6801-b974.ngrok-free.app/api/auth/login');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+
+      if (response.statusCode == 200) {
+        // Connexion réussie, tu peux décoder le token ou user info ici :
+        final data = jsonDecode(response.body);
+        // Par exemple, sauvegarder le token, naviguer, etc.
+        print('Connexion réussie ! Données : $data');
+        // Navigator.pushReplacement... etc
+      } else {
+        // Affiche une erreur à l'utilisateur
+        print('Erreur de connexion : ${response.body}');
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text('Erreur'),
+            content: Text('Échec de la connexion. Vérifie tes identifiants.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: Text('OK')),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      print('Erreur réseau : $e');
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text('Erreur réseau'),
+          content: Text('Impossible de se connecter au serveur.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: Text('OK')),
+          ],
+        ),
+      );
+    } finally {
+      setState(() { _isLoading = false; });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,6 +139,15 @@ class _LogInScreenState extends State<LogInScreen> {
                   "Mentions légales",
                   style: TextStyle(fontSize: 16, color: Colors.blue),
                 ),
+              ),
+            ),
+          ),
+          if (_isLoading)
+          Container(
+            color: Colors.black.withOpacity(0.5),
+            child: Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             ),
           ),
