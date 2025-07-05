@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class LogInScreen extends StatefulWidget {
   @override
@@ -9,6 +11,51 @@ class _LogInScreenState extends State<LogInScreen> {
   // Controllers pour gérer les champs de texte
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  Future<void> loginUser(String email, String password) async {
+    final url = Uri.parse('http://169.254.123.83:5000/api/auth/login');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+
+      if (response.statusCode == 200) {
+        // Connexion réussie, tu peux décoder le token ou user info ici :
+        final data = jsonDecode(response.body);
+        // Par exemple, sauvegarder le token, naviguer, etc.
+        print('Connexion réussie ! Données : $data');
+        // Navigator.pushReplacement... etc
+      } else {
+        // Affiche une erreur à l'utilisateur
+        print('Erreur de connexion : ${response.body}');
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text('Erreur'),
+            content: Text('Échec de la connexion. Vérifie tes identifiants.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: Text('OK')),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      print('Erreur réseau : $e');
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text('Erreur réseau'),
+          content: Text('Impossible de se connecter au serveur.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: Text('OK')),
+          ],
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,8 +113,7 @@ class _LogInScreenState extends State<LogInScreen> {
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: ElevatedButton(
                   onPressed: () {
-                    // Ajouter ici la logique de connexion
-                    print('Connexion avec ${emailController.text} et ${passwordController.text}');
+                    loginUser(emailController.text, passwordController.text);
                   },
                   child: Text('Se connecter'),
                 ),
