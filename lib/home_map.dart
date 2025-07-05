@@ -10,6 +10,10 @@ import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 
 class HomeMapPage extends StatefulWidget {
+  final String search;
+  final VoidCallback? onClearSearch;
+  const HomeMapPage({Key? key, required this.search, this.onClearSearch}) : super(key: key);
+
   @override
   State<HomeMapPage> createState() => _HomeMapPageState();
 }
@@ -521,6 +525,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
           ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
+                // GoogleMap en premier (en dessous)
                 GoogleMap(
                   initialCameraPosition: CameraPosition(
                     target: _currentLocation!,
@@ -533,7 +538,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
                   onCameraIdle: () {
                     if (_lastCameraPosition != null) {
                       _lastIdleCameraPosition = _lastCameraPosition;
-                      // Vérifier si l'utilisateur s'est suffisamment éloigné
                       bool shouldShow = _shouldShowSearchButton(
                         _lastCameraPosition!.target,
                         _lastCameraPosition!.zoom
@@ -551,7 +555,61 @@ class _HomeMapPageState extends State<HomeMapPage> {
                   mapType: MapType.normal,
                   markers: _markers,
                 ),
-                if (_showSearchHereButton)
+                // Suggestions APRÈS pour être au-dessus (z-index élevé)
+                if (widget.search.isNotEmpty)
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    top: 0,
+                    child: Material(
+                      elevation: 12, // z-index élevé
+                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(10)),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.vertical(bottom: Radius.circular(10)),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: _points
+                              .where((p) => p.title.toLowerCase().contains(widget.search.toLowerCase()))
+                              .map((p) => Column(
+                                    children: [
+                                      InkWell(
+                                        onTap: () async {
+                                          if (_mapController != null) {
+                                            await _mapController!.animateCamera(
+                                              CameraUpdate.newLatLngZoom(
+                                                LatLng(p.latitude, p.longitude),
+                                                17.0,
+                                              ),
+                                            );
+                                          }
+                                          _showModernModal(p);
+                                          if (widget.onClearSearch != null) widget.onClearSearch!();
+                                        },
+                                        child: Container(
+                                          alignment: Alignment.centerLeft,
+                                          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                                          child: Text(
+                                            p.title,
+                                            style: TextStyle(fontSize: 13),
+                                            textAlign: TextAlign.left,
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        height: 1,
+                                        color: Color(0xFFE0E0E0),
+                                      ),
+                                    ],
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (_showSearchHereButton && widget.search.isEmpty)
                   Positioned(
                     top: 10,
                     left: 0,
@@ -571,7 +629,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
                             final lat = _lastIdleCameraPosition!.target.latitude;
                             final lng = _lastIdleCameraPosition!.target.longitude;
                             final zoom = _lastIdleCameraPosition!.zoom;
-                            // Charger seulement les points sans rafraîchir la carte
                             _loadPointsOnly(
                               centerLat: lat,
                               centerLng: lng,

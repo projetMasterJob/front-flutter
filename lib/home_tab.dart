@@ -17,7 +17,14 @@ class HomeTabPage extends StatefulWidget {
 class _HomeTabPageState extends State<HomeTabPage> {
   int _selectedIndex = 0;
   String _search = '';
+  final TextEditingController _searchController = TextEditingController();
   ListSortOption _sort = ListSortOption.nameAZ;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   void _showSortModal() async {
     final result = await showModalBottomSheet<ListSortOption>(
@@ -85,6 +92,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
                     SizedBox(width: 8),
                     Expanded(
                       child: TextField(
+                        controller: _searchController,
                         onChanged: (v) => setState(() => _search = v),
                         decoration: InputDecoration(
                           hintText: 'Rechercher...',
@@ -127,7 +135,15 @@ class _HomeTabPageState extends State<HomeTabPage> {
               child: IndexedStack(
                 index: _selectedIndex,
                 children: [
-                  HomeMapPage(),
+                  HomeMapPage(
+                    search: _search,
+                    onClearSearch: () {
+                      setState(() {
+                        _search = '';
+                        _searchController.clear();
+                      });
+                    },
+                  ),
                   HomeListPage(search: _search, sort: _sort),
                 ],
               ),
