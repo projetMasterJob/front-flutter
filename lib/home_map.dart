@@ -8,6 +8,7 @@ import 'package:flutter_compass/flutter_compass.dart';
 import 'dart:ui' as ui;
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeMapPage extends StatefulWidget {
   final String search;
@@ -164,6 +165,8 @@ class _HomeMapPageState extends State<HomeMapPage> {
             longitude: e['location'] != null ? e['location']['longitude'] : 0.0,
             title: e['name'],
             description: e['description'],
+            address: e['location'] != null ? e['location']['address'] : "Non renseigné",
+            cp: e['location'] != null ? e['location']['cp'] : "Non renseigné",
             image_url: e['image_url'] ?? '',
           )),
           ...jobs.map((e) => Point(
@@ -171,6 +174,8 @@ class _HomeMapPageState extends State<HomeMapPage> {
             longitude: e['location'] != null ? e['location']['longitude'] : 0.0,
             title: e['title'],
             description: e['description'],
+            address: e['location'] != null ? e['location']['address'] : "Non renseigné",
+            cp: e['location'] != null ? e['location']['cp'] : "Non renseigné",
             image_url: e['image_url'] ?? '',
           )),
         ]
@@ -233,6 +238,8 @@ class _HomeMapPageState extends State<HomeMapPage> {
             longitude: e['location'] != null ? e['location']['longitude'] : 0.0,
             title: e['name'],
             description: e['description'],
+            address: e['location'] != null ? e['location']['address'] : "Non renseigné",
+            cp: e['location'] != null ? e['location']['cp'] : "Non renseigné",
             image_url: e['image_url'] ?? '',
           )),
           ...jobs.map((e) => Point(
@@ -240,6 +247,8 @@ class _HomeMapPageState extends State<HomeMapPage> {
             longitude: e['location'] != null ? e['location']['longitude'] : 0.0,
             title: e['title'],
             description: e['description'],
+            address: e['location'] != null ? e['location']['address'] : "Non renseigné",
+            cp: e['location'] != null ? e['location']['cp'] : "Non renseigné",
             image_url: e['image_url'] ?? '',
           )),
         ]
@@ -329,19 +338,20 @@ class _HomeMapPageState extends State<HomeMapPage> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
+          onTap: () => Navigator.of(context).pop(), // Ferme la modale au clic sur l'arrière-plan
           child: Container(
             width: double.infinity,
             height: MediaQuery.of(context).size.height,
             color: Colors.transparent,
             child: Center(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final modalWidth = constraints.maxWidth * 0.8;
-                  return Stack(
+              child: GestureDetector(
+                onTap: () {}, // Empêche la propagation du clic sur la modale
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final modalWidth = constraints.maxWidth * 0.8;
+                    return Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      // Contenu principal
                       Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -368,11 +378,11 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: Colors.white.withValues(alpha: 0.9),
                                       borderRadius: BorderRadius.circular(20),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.08),
+                                          color: Colors.black.withValues(alpha: 0.08),
                                           blurRadius: 4,
                                         ),
                                       ],
@@ -407,7 +417,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.grey[800]!.withOpacity(0.20),
+                                  color: Colors.grey[800]!.withValues(alpha: 0.20),
                                   blurRadius: 6,
                                   offset: const Offset(0, -2),
                                 ),
@@ -441,23 +451,23 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                   ),
                                   // Adresse + icône
                                   Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
                                       Padding(
-                                        padding: const EdgeInsets.only(right: 10, top: 2),
-                                        child: Icon(Icons.location_on, size: 16, color: Color(0xFF3264E0)),
+                                        padding: const EdgeInsets.only(right: 10),
+                                        child: Icon(Icons.location_on, size: 20, color: Color(0xFF3264E0)),
                                       ),
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              "Place Masséna",
+                                              point.address,
                                               style: const TextStyle(fontSize: 13, color: Colors.black87),
                                             ),
-                                            const SizedBox(height: 10),
+                                            const SizedBox(height: 2),
                                             Text(
-                                              "06100 Nice",
+                                              point.cp,
                                               style: const TextStyle(fontSize: 13, color: Colors.black54),
                                             ),
                                           ],
@@ -465,6 +475,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                       ),
                                     ],
                                   ),
+                                  const SizedBox(height: 30),
                                 ],
                               ),
                             ),
@@ -503,28 +514,31 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                 borderRadius: BorderRadius.circular(10),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
+                                    color: Colors.black.withValues(alpha: 0.08),
                                     blurRadius: 4,
                                   ),
                                 ],
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.directions, color: Colors.white, size: 16),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Itinéraire',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
+                              child: GestureDetector(
+                                onTap: () => _openMapsNavigation(point),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.directions, color: Colors.white, size: 16),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Itinéraire',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                            SizedBox(width: 30),
+                            SizedBox(width: 10),
                             Container(
                               width: 120,
                               height: 40,
@@ -533,25 +547,28 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                 borderRadius: BorderRadius.circular(10),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
+                                    color: Colors.black.withValues(alpha: 0.08),
                                     blurRadius: 4,
                                   ),
                                 ],
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.info, color: Colors.white, size: 16),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Voir plus',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
+                              child: GestureDetector(
+                                onTap: () => print("détail"),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.info, color: Colors.white, size: 16),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Voir plus',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -563,7 +580,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
               ),
             ),
           ),
-        );
+        ));
       },
     );
   }
@@ -574,6 +591,21 @@ class _HomeMapPageState extends State<HomeMapPage> {
 
   Future<void> _openAppSettings() async {
     await LocationService.openAppSettings();
+  }
+
+  Future<void> _openMapsNavigation(Point point) async {
+    final url = 'https://www.google.com/maps/dir/?api=1&destination=${point.latitude},${point.longitude}';
+    
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        print("Aucune application configurée pour naviguer");
+      }
+    } catch (e) {
+      print("Aucune application configurée pour naviguer");
+    }
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -815,7 +847,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(4),
                         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
                       ),

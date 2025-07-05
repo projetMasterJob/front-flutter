@@ -95,7 +95,7 @@ class _HomeListPageState extends State<HomeListPage> {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 6,
             spreadRadius: 0.5,
             offset: Offset(0, 2),
