@@ -328,112 +328,241 @@ class _HomeMapPageState extends State<HomeMapPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return Stack(
-          children: [
-            GestureDetector(
-              onTap: () => Navigator.of(context).pop(),
-              child: Container(
-                width: double.infinity,
-                height: MediaQuery.of(context).size.height,
-                color: Colors.transparent,
-              ),
-            ),
-            Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 16)],
-                ),
-                child: Stack(
-                  children: [
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                point.title,
-                                style: const TextStyle(
-                                  color: Color(0xFF3264E0),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
+        return GestureDetector(
+          onTap: () => Navigator.of(context).pop(),
+          child: Container(
+            width: double.infinity,
+            height: MediaQuery.of(context).size.height,
+            color: Colors.transparent,
+            child: Center(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final modalWidth = constraints.maxWidth * 0.8;
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Contenu principal
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Image en haut
+                          Container(
+                            width: modalWidth,
+                            height: 200,
+                            decoration: BoxDecoration(
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(18),
+                                topRight: Radius.circular(18),
+                              ),
+                              image: DecorationImage(
+                                image: NetworkImage(point.image_url),
+                                fit: BoxFit.cover,
                               ),
                             ),
-                            GestureDetector(
-                              onTap: () => Navigator.of(context).pop(),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[200],
-                                  shape: BoxShape.circle,
+                            child: Stack(
+                              children: [
+                                // Badge distance
+                                Positioned(
+                                  right: 4,
+                                  bottom: 4,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.08),
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.directions_walk, size: 16, color: Color(0xFF3264E0)),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          distance != null ? "${distance.toStringAsFixed(2)} km" : "- km",
+                                          style: const TextStyle(
+                                            color: Color(0xFF3264E0),
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                                padding: const EdgeInsets.all(6),
-                                child: const Icon(Icons.close, size: 20, color: Colors.grey),
+                              ],
+                            ),
+                          ),
+                          // Bloc blanc en dessous
+                          Container(
+                            width: modalWidth,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(18),
+                                bottomRight: Radius.circular(18),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey[800]!.withOpacity(0.20),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, -2),
+                                ),
+                              ],
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Titre
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 0, bottom: 10),
+                                    child: Text(
+                                      point.title,
+                                      style: const TextStyle(
+                                        color: Color(0xFF3264E0),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                  // Description
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: Text(
+                                      point.description,
+                                      style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                    ),
+                                  ),
+                                  // Adresse + icône
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(right: 10, top: 2),
+                                        child: Icon(Icons.location_on, size: 16, color: Color(0xFF3264E0)),
+                                      ),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "Place Masséna",
+                                              style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                            ),
+                                            const SizedBox(height: 10),
+                                            Text(
+                                              "06100 Nice",
+                                              style: const TextStyle(fontSize: 13, color: Colors.black54),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Center(
+                          ),
+                        ],
+                      ),
+                      // Croix de fermeture en haut à droite
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
                           child: Container(
-                            height: 1,
-                            width: double.infinity,
-                            margin: const EdgeInsets.symmetric(vertical: 20),
-                            color: Color(0xFFF5F5F5), // white smoke
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(6),
+                            child: const Icon(Icons.close, size: 22, color: Colors.grey),
                           ),
                         ),
-                        Text(
-                          point.description,
-                          style: const TextStyle(fontSize: 13, color: Colors.black87),
-                        ),
-                        const SizedBox(height: 40),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      ),
+                      // Boutons en bas
+                      Positioned(
+                        bottom: -20,
+                        left: 0,
+                        right: 0,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              width: 120,
+                              height: 40,
                               decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(30),
+                                color: Color(0xFF2ECC40),
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    blurRadius: 4,
+                                  ),
+                                ],
                               ),
                               child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.directions_walk, size: 16, color: Color(0xFF3264E0)),
-                                  const SizedBox(width: 6),
+                                  Icon(Icons.directions, color: Colors.white, size: 16),
+                                  SizedBox(width: 8),
                                   Text(
-                                    distance != null ? "${distance.toStringAsFixed(2)} Km" : "- Km",
-                                    style: const TextStyle(
-                                      color: Color(0xFF3264E0),
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13,
+                                    'Itinéraire',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF3264E0),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+                            SizedBox(width: 30),
+                            Container(
+                              width: 120,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Color(0xFF3264E0),
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    blurRadius: 4,
+                                  ),
+                                ],
                               ),
-                              child: const Text('Détails >>', style: TextStyle(fontSize: 13, color: Colors.white)),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.info, color: Colors.white, size: 16),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Voir plus',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
-          ],
+          ),
         );
       },
     );
@@ -550,8 +679,11 @@ class _HomeMapPageState extends State<HomeMapPage> {
                   myLocationEnabled: true,
                   myLocationButtonEnabled: false,
                   compassEnabled: false,
+                  zoomControlsEnabled: true,
+                  zoomGesturesEnabled: true,
                   rotateGesturesEnabled: true,
                   tiltGesturesEnabled: true,
+                  mapToolbarEnabled: false,
                   mapType: MapType.normal,
                   markers: _markers,
                 ),
