@@ -37,20 +37,57 @@ class _HomeTabPageState extends State<HomeTabPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 18, left: 18, right: 12, bottom: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          'Trier la liste',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Icon(Icons.close, color: Colors.grey[700], size: 24),
+                    ),
+                  ],
+                ),
+              ),
               ListTile(
                 title: Text('Nom A-Z', style: TextStyle(color: _sort == ListSortOption.nameAZ ? Color(0xFF3264E0) : null)),
                 onTap: () => Navigator.pop(context, ListSortOption.nameAZ),
                 selected: _sort == ListSortOption.nameAZ,
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                height: 1,
+                margin: EdgeInsets.symmetric(vertical: 6),
+                color: Colors.grey[300],
               ),
               ListTile(
                 title: Text('Nom Z-A', style: TextStyle(color: _sort == ListSortOption.nameZA ? Color(0xFF3264E0) : null)),
                 onTap: () => Navigator.pop(context, ListSortOption.nameZA),
                 selected: _sort == ListSortOption.nameZA,
               ),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                height: 1,
+                margin: EdgeInsets.symmetric(vertical: 6),
+                color: Colors.grey[300],
+              ),
               ListTile(
                 title: Text('Distance croissante', style: TextStyle(color: _sort == ListSortOption.distanceAsc ? Color(0xFF3264E0) : null)),
                 onTap: () => Navigator.pop(context, ListSortOption.distanceAsc),
                 selected: _sort == ListSortOption.distanceAsc,
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                height: 1,
+                margin: EdgeInsets.symmetric(vertical: 6),
+                color: Colors.grey[300],
               ),
               ListTile(
                 title: Text('Distance décroissante', style: TextStyle(color: _sort == ListSortOption.distanceDesc ? Color(0xFF3264E0) : null)),
