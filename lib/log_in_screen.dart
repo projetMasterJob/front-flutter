@@ -11,9 +11,11 @@ class _LogInScreenState extends State<LogInScreen> {
   // Controllers pour gérer les champs de texte
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool _isLoading = false;
 
   Future<void> loginUser(String email, String password) async {
-    final url = Uri.parse('http://169.254.123.83:5000/api/auth/login');
+    setState(() { _isLoading = true; });
+    final url = Uri.parse('https://3e75-2001-861-44c2-15b0-8507-f178-6801-b974.ngrok-free.app/api/auth/login');
 
     try {
       final response = await http.post(
@@ -54,6 +56,8 @@ class _LogInScreenState extends State<LogInScreen> {
           ],
         ),
       );
+    } finally {
+      setState(() { _isLoading = false; });
     }
   }
 
@@ -136,6 +140,15 @@ class _LogInScreenState extends State<LogInScreen> {
                   "Mentions légales",
                   style: TextStyle(fontSize: 16, color: Colors.blue),
                 ),
+              ),
+            ),
+          ),
+          if (_isLoading)
+          Container(
+            color: Colors.black.withOpacity(0.5),
+            child: Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             ),
           ),
