@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class ConversationDetailScreen extends StatelessWidget {
   final String name; // Nom de la personne passée depuis la liste
 
-  ConversationDetailScreen({required this.name});
+  const ConversationDetailScreen({super.key, required this.name});
 
   @override
   Widget build(BuildContext context) {

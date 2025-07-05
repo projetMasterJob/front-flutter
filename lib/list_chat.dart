@@ -1,29 +1,19 @@
 import 'package:flutter/material.dart';
-import 'chatDetail.dart'; // Import de la page détaillée
+import 'chat_detail.dart'; // Import de la page détaillée
 
 class ChatScreen extends StatelessWidget {
+  ChatScreen({super.key});
+
   final List<Map<String, String>> conversations = [
-    {
-      'name': 'Garry Eponge',
-      'message': 'Bob, j\'ai faim?'
-    },
-    {
-      'name': 'Chandler',
-      'message': 'Hibernate !'
-    },
-    {
-      'name': 'Lisa Lucas',
-      'message': 'On se voit demain à la réunion ?'
-    },
+    {'name': 'Garry Eponge', 'message': 'Bob, j\'ai faim?'},
+    {'name': 'Chandler', 'message': 'Hibernate !'},
+    {'name': 'Lisa Lucas', 'message': 'On se voit demain à la réunion ?'},
     {
       'name': 'JBM ',
       'message': 'Sac à dos, sac à dos !'
           'Cest la folie, de la mort qui tue ! je fais un ong message pour tester'
     },
-    {
-      'name': 'Emma Martin',
-      'message': 'Tu as vu le match hier soir ?'
-    },
+    {'name': 'Emma Martin', 'message': 'Tu as vu le match hier soir ?'},
   ];
 
   @override
