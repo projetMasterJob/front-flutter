@@ -29,8 +29,8 @@ class _HomeListPageState extends State<HomeListPage> {
   Future<void> _fetchData() async {
     setState(() { isLoading = true; });
     await _getUserPosition();
-    final companiesRes = await http.get(Uri.parse('http://192.168.1.8:5001/companies'));
-    final jobsRes = await http.get(Uri.parse('http://192.168.1.8:5001/jobs'));
+    final companiesRes = await http.get(Uri.parse('https://cartographielocal.vercel.app/companies'));
+    final jobsRes = await http.get(Uri.parse('https://cartographielocal.vercel.app/jobs'));
     setState(() {
       companies = companiesRes.statusCode == 200 ? json.decode(companiesRes.body) : [];
       jobs = jobsRes.statusCode == 200 ? json.decode(jobsRes.body) : [];

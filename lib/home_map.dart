@@ -151,7 +151,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
       _showSearchHereButton = false;
     });
     
-    final url = Uri.parse('http://192.168.1.8:5001/map/entities?center_lat=$centerLat&center_lng=$centerLng&zoom_level=$zoom&radius_km=$radiusKm');
+    final url = Uri.parse('https://cartographielocal.vercel.app/map/entities?center_lat=$centerLat&center_lng=$centerLng&zoom_level=$zoom&radius_km=$radiusKm');
     
     try {
       final response = await http.get(url);
@@ -224,7 +224,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
       _isSearchButtonLoading = true;
     });
     
-    final url = Uri.parse('http://192.168.1.8:5001/map/entities?center_lat=$centerLat&center_lng=$centerLng&zoom_level=$zoom&radius_km=$radiusKm');
+    final url = Uri.parse('https://cartographielocal.vercel.app/map/entities?center_lat=$centerLat&center_lng=$centerLng&zoom_level=$zoom&radius_km=$radiusKm');
     
     try {
       final response = await http.get(url);
