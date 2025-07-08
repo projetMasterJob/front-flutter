@@ -167,6 +167,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
             description: e['description'],
             address: e['location'] != null ? e['location']['address'] : "Non renseigné",
             cp: e['location'] != null ? e['location']['cp'] : "Non renseigné",
+            entity_type: e['location'] != null ? e['location']['entity_type'] : "Non renseigné",
             image_url: e['image_url'] ?? '',
           )),
           ...jobs.map((e) => Point(
@@ -176,6 +177,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
             description: e['description'],
             address: e['location'] != null ? e['location']['address'] : "Non renseigné",
             cp: e['location'] != null ? e['location']['cp'] : "Non renseigné",
+            entity_type: e['location'] != null ? e['location']['entity_type'] : "Non renseigné",
             image_url: e['image_url'] ?? '',
           )),
         ]
@@ -240,6 +242,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
             description: e['description'],
             address: e['location'] != null ? e['location']['address'] : "Non renseigné",
             cp: e['location'] != null ? e['location']['cp'] : "Non renseigné",
+            entity_type: e['location'] != null ? e['location']['entity_type'] : "Non renseigné",
             image_url: e['image_url'] ?? '',
           )),
           ...jobs.map((e) => Point(
@@ -249,6 +252,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
             description: e['description'],
             address: e['location'] != null ? e['location']['address'] : "Non renseigné",
             cp: e['location'] != null ? e['location']['cp'] : "Non renseigné",
+            entity_type: e['location'] != null ? e['location']['entity_type'] : "Non renseigné",
             image_url: e['image_url'] ?? '',
           )),
         ]
@@ -553,7 +557,14 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                 ],
                               ),
                               child: GestureDetector(
-                                onTap: () => print("détail"),
+                                onTap: () {
+                                  Navigator.of(context).pop();
+                                  if (point.entity_type == 'company') {
+                                    Navigator.of(context).pushNamed('/detail_company');
+                                  } else if (point.entity_type == 'job') {
+                                    Navigator.of(context).pushNamed('/detail_job');
+                                  }
+                                },
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [

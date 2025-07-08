@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'welcome_screen.dart';
 import 'log_in_screen.dart';
+import 'detail_job.dart';
+import 'detail_company.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,6 +37,10 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: WelcomeScreen(),
+      routes: {
+        '/detail_job': (context) => DetailJobPage(),
+        '/detail_company': (context) => DetailCompanyPage(),
+      },
     );
   }
 }

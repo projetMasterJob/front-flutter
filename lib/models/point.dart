@@ -5,6 +5,7 @@ class Point {
   final String description;
   final String address;
   final String cp;
+  final String entity_type;
   final String image_url;
 
   Point({
@@ -14,6 +15,7 @@ class Point {
     required this.description,
     required this.address,
     required this.cp,
+    required this.entity_type,
     required this.image_url,
   });
-} 
+}
