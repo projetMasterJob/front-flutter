@@ -3,7 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'services/location_service.dart';
-import 'home_tab.dart'; // pour ListSortOption
+import 'home_tab.dart';
 import 'models/point.dart';
 
 class HomeListPage extends StatefulWidget {
@@ -85,6 +85,7 @@ class _HomeListPageState extends State<HomeListPage> {
   Widget _buildItem(Map item) {
     final location = item['location'] ?? {};
     final point = Point(
+      id: item['id'],
       latitude: location['latitude'] ?? 0.0,
       longitude: location['longitude'] ?? 0.0,
       title: item['title'] ?? item['name'] ?? '',
@@ -101,7 +102,7 @@ class _HomeListPageState extends State<HomeListPage> {
         if (point.entity_type == 'company') {
           Navigator.of(context).pushNamed('/detail_company');
         } else if (point.entity_type == 'job') {
-          Navigator.of(context).pushNamed('/detail_job');
+          Navigator.of(context).pushNamed('/detail_job', arguments: point.id);
         }
       },
       child: Container(

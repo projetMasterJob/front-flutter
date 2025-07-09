@@ -161,6 +161,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
           final List<dynamic> jobs = data['jobs'] ?? [];
         final List<Point> points = [
           ...companies.map((e) => Point(
+            id: e['id'],
             latitude: e['location'] != null ? e['location']['latitude'] : 0.0,
             longitude: e['location'] != null ? e['location']['longitude'] : 0.0,
             title: e['name'],
@@ -171,6 +172,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
             image_url: e['image_url'] ?? '',
           )),
           ...jobs.map((e) => Point(
+            id: e['id'],
             latitude: e['location'] != null ? e['location']['latitude'] : 0.0,
             longitude: e['location'] != null ? e['location']['longitude'] : 0.0,
             title: e['title'],
@@ -236,6 +238,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
         final List<dynamic> jobs = data['jobs'] ?? [];
         final List<Point> points = [
           ...companies.map((e) => Point(
+            id: e['id'],
             latitude: e['location'] != null ? e['location']['latitude'] : 0.0,
             longitude: e['location'] != null ? e['location']['longitude'] : 0.0,
             title: e['name'],
@@ -246,6 +249,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
             image_url: e['image_url'] ?? '',
           )),
           ...jobs.map((e) => Point(
+            id: e['id'],
             latitude: e['location'] != null ? e['location']['latitude'] : 0.0,
             longitude: e['location'] != null ? e['location']['longitude'] : 0.0,
             title: e['title'],
@@ -562,7 +566,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                   if (point.entity_type == 'company') {
                                     Navigator.of(context).pushNamed('/detail_company');
                                   } else if (point.entity_type == 'job') {
-                                    Navigator.of(context).pushNamed('/detail_job');
+                                    Navigator.of(context).pushNamed('/detail_job', arguments: point.id);
                                   }
                                 },
                                 child: Row(

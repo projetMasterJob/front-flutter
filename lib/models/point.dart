@@ -1,4 +1,5 @@
 class Point {
+  final String id;
   final double latitude;
   final double longitude;
   final String title;
@@ -9,6 +10,7 @@ class Point {
   final String image_url;
 
   Point({
+    required this.id,
     required this.latitude,
     required this.longitude,
     required this.title,
