@@ -100,7 +100,7 @@ class _HomeListPageState extends State<HomeListPage> {
     return InkWell(
       onTap: () {
         if (point.entity_type == 'company') {
-          Navigator.of(context).pushNamed('/detail_company');
+          Navigator.of(context).pushNamed('/detail_company', arguments: point.id);
         } else if (point.entity_type == 'job') {
           Navigator.of(context).pushNamed('/detail_job', arguments: point.id);
         }
