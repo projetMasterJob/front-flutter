@@ -16,7 +16,7 @@ class _LogInScreenState extends State<LogInScreen> {
 
   Future<void> loginUser(String email, String password) async {
     setState(() { _isLoading = true; });
-    final url = Uri.parse('https://3e75-2001-861-44c2-15b0-8507-f178-6801-b974.ngrok-free.app/api/auth/login');
+    final url = Uri.parse('https://7f0385706372.ngrok-free.app/api/auth/login');
 
     try {
       final response = await http.post(
