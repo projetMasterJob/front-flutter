@@ -138,7 +138,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
-                    if (_selectedIndex == 1) // Onglet Liste
+                    if (_selectedIndex == 1)
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: IconButton(
@@ -227,7 +227,7 @@ class _TabButton extends StatelessWidget {
                     ? Container(
                         height: 3,
                         width: double.infinity,
-                        color: Color(0xFF7EC8E3), // bleu clair
+                        color: Color(0xFF7EC8E3),
                       )
                     : SizedBox.shrink(),
               ),

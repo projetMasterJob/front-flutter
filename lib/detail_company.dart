@@ -324,7 +324,7 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
               ),
             ),
           ),
-          // Bloc "Nos offres" ou "Notre offre"
+          // Bloc "Nos offres"
           SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -347,11 +347,16 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                     children: [
                       Text(
                         jobs.length > 1 ? "Nos offres" : "Notre offre",
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF3264E0), fontSize: 22),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF3264E0), fontSize: 16),
                       ),
                       Spacer(),
                       Image.asset('assets/images/mallette.png', width: 24, height: 24),
                     ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    "Retrouvez ici toutes les offres d'emploi actuellement proposées par ${companyName}. Postulez directement à celles qui vous intéressent !",
+                    style: TextStyle(fontSize: 13, color: Colors.grey[800]),
                   ),
                   SizedBox(height: 16),
                   jobs.isEmpty
@@ -365,106 +370,117 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                             itemBuilder: (context, i) {
                               final job = jobs[i];
                               final DateTime? postedAt = job['posted_at'] != null ? DateTime.tryParse(job['posted_at']) : null;
-                              final bool isNew = postedAt != null && DateTime.now().difference(postedAt).inHours < 24;
+                              final bool isNew = postedAt != null && DateTime.now().difference(postedAt).inHours < 2*4;
                               final String jobType = job['job_type'] == 'full_time' ? 'Temps plein' : (job['job_type'] == 'part_time' ? 'Temps partiel' : '');
                               final String salary = job['salary'] != null ? '${job['salary'].toString().replaceAll('.0','')}€ / mois' : '';
                               return Container(
                                 width: 270,
+                                height: 280,
+                                margin: EdgeInsets.symmetric(horizontal: 6, vertical: 12),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.08),
-                                      blurRadius: 8,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: Color(0xFFF5F5F5), width: 1),
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                child: Stack(
                                   children: [
-                                    // Image + badge
-                                    Stack(
-                                      children: [
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.only(
-                                            topLeft: Radius.circular(16),
-                                            topRight: Radius.circular(16),
+                                    // Image de fond
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.network(
+                                        job['image_url'] ?? '',
+                                        width: 270,
+                                        height: 280,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (c, e, s) => Container(
+                                          width: 270,
+                                          height: 280,
+                                          color: Colors.grey[200],
+                                          child: Icon(Icons.image, color: Colors.grey[400]),
+                                        ),
+                                      ),
+                                    ),
+                                    // Badge nouveau
+                                    if (isNew)
+                                      Positioned(
+                                        top: 10,
+                                        left: 10,
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFF2ECC40),
+                                            borderRadius: BorderRadius.circular(8),
                                           ),
-                                          child: Image.network(
-                                            job['image_url'] ?? '',
-                                            width: 270,
-                                            height: 120,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (c, e, s) => Container(
-                                              width: 270,
-                                              height: 120,
-                                              color: Colors.grey[200],
-                                              child: Icon(Icons.image, color: Colors.grey[400]),
-                                            ),
+                                          child: Text(
+                                            'Nouveau',
+                                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                                           ),
                                         ),
-                                        if (isNew)
-                                          Positioned(
-                                            top: 10,
-                                            left: 10,
-                                            child: Container(
-                                              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                              decoration: BoxDecoration(
-                                                color: Color(0xFF2ECC40),
-                                                borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    // Bloc blanc superposé moitié basse
+                                    Positioned(
+                                      left: 0,
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Opacity(
+                                        opacity: 0.9,
+                                        child: Container(
+                                          height: 140,
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFFF5F5F5),
+                                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.18),
+                                                blurRadius: 4,
+                                                offset: Offset(0, -1),
                                               ),
-                                              child: Text(
-                                                'Nouveau',
-                                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                                              ),
-                                            ),
+                                            ],
                                           ),
-                                      ],
-                                    ),
-                                    // Titre
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 12, right: 12, top: 12),
-                                      child: Text(
-                                        job['title'] ?? '',
-                                        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 18, color: Colors.black),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    // Type + salaire
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 12, right: 12, top: 10),
-                                      child: Row(
-                                        children: [
-                                          if (jobType.isNotEmpty)
-                                            Text(jobType, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                          if (jobType.isNotEmpty && salary.isNotEmpty)
-                                            Padding(
-                                              padding: const EdgeInsets.symmetric(horizontal: 6),
-                                              child: Text('•', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                                          child: Padding(
+                                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  job['title'] ?? '',
+                                                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 20, color: Colors.black),
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                                SizedBox(height: 12),
+                                                Row(
+                                                  children: [
+                                                    if (jobType.isNotEmpty)
+                                                      Text(jobType, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.grey[800])),
+                                                    if (jobType.isNotEmpty && salary.isNotEmpty)
+                                                      Padding(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                                                        child: Text('•', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                                                      ),
+                                                    if (salary.isNotEmpty)
+                                                      Text(salary, style: TextStyle(fontSize: 15, color: Color(0xFF1976D2), fontWeight: FontWeight.w500)),
+                                                  ],
+                                                ),
+                                                Spacer(),
+                                                SizedBox(
+                                                  width: double.infinity,
+                                                  height: 44,
+                                                  child: ElevatedButton(
+                                                    onPressed: () {
+                                                      Navigator.of(context).pushNamed('/detail_job', arguments: job['id']);
+                                                    },
+                                                    child: Text("Voir plus", style: TextStyle(fontSize: 17)),
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: Color(0xFF1976D2),
+                                                      foregroundColor: Colors.white,
+                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                      elevation: 0,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          if (salary.isNotEmpty)
-                                            Text(salary, style: TextStyle(fontSize: 14, color: Color(0xFF1976D2), fontWeight: FontWeight.w500)),
-                                        ],
-                                      ),
-                                    ),
-                                    SizedBox(height: 10),                                    // Bouton voir plus
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                      child: SizedBox(
-                                        width: double.infinity,
-                                        height: 44,
-                                        child: ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pushNamed('/detail_job', arguments: job['id']);
-                                          },
-                                          child: Text("Postuler", style: TextStyle(fontSize: 16)),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Color(0xFF1976D2),
-                                            foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                           ),
                                         ),
                                       ),

@@ -20,6 +20,7 @@ class HomeMapPage extends StatefulWidget {
 }
 
 class _HomeMapPageState extends State<HomeMapPage> {
+
   GoogleMapController? _mapController;
   LatLng? _currentLocation;
   bool _locationPermissionGranted = false;
@@ -34,12 +35,8 @@ class _HomeMapPageState extends State<HomeMapPage> {
   bool _isCenteredOnUser = true;
   bool _showSearchHereButton = false;
   CameraPosition? _lastIdleCameraPosition;
-  
-  // Variables pour suivre la position d'origine et le déplacement
   LatLng? _originalLocation;
-  static const double _displacementThreshold = 0.5; // Distance en km pour déclencher le bouton
-  
-  // Variable pour gérer l'état de chargement du bouton
+  static const double _displacementThreshold = 0.5;
   bool _isSearchButtonLoading = false;
 
   static const String _mapStyleHidePOI = '''[
@@ -107,7 +104,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
       final position = await LocationService.getCurrentLocation();
       setState(() {
         _currentLocation = position;
-        _originalLocation = position; // Définir la position d'origine
+        _originalLocation = position;
         _locationPermissionGranted = true;
         _serviceEnabled = true;
         _isLoading = false;
@@ -130,14 +127,13 @@ class _HomeMapPageState extends State<HomeMapPage> {
     double distance = LocationService.calculateDistance(_originalLocation!, currentPosition);
     
     // Ajuster le seuil en fonction du zoom
-    // Plus le zoom est élevé, plus le seuil est petit (zone plus précise)
     double adjustedThreshold = _displacementThreshold;
     if (currentZoom > 15) {
-      adjustedThreshold = 0.2; // Zone très précise
+      adjustedThreshold = 0.2;
     } else if (currentZoom > 12) {
-      adjustedThreshold = 0.5; // Zone moyenne
+      adjustedThreshold = 0.5;
     } else {
-      adjustedThreshold = 1.0; // Zone large
+      adjustedThreshold = 1.0;
     }
     
 
@@ -200,7 +196,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
           _markers = markers;
           _points = points;
           _isLoading = false;
-          // Ne pas forcer l'affichage du bouton si pas de résultats
           // Le bouton s'affichera seulement si l'utilisateur s'est éloigné
         });
               } else {
@@ -208,7 +203,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
             _markers = {};
             _points = [];
             _isLoading = false;
-            // Ne pas forcer l'affichage du bouton en cas d'erreur
           });
         }
           } catch (e) {
@@ -216,14 +210,12 @@ class _HomeMapPageState extends State<HomeMapPage> {
           _markers = {};
           _points = [];
           _isLoading = false;
-          // Ne pas forcer l'affichage du bouton en cas d'exception
         });
       }
   }
 
   // Nouvelle fonction pour charger seulement les points sans rafraîchir la carte
   Future<void> _loadPointsOnly({required double centerLat, required double centerLng, required double zoom, double radiusKm = 5.0}) async {
-    // Activer l'état de chargement du bouton
     setState(() {
       _isSearchButtonLoading = true;
     });
@@ -277,20 +269,20 @@ class _HomeMapPageState extends State<HomeMapPage> {
         setState(() {
           _markers = markers;
           _points = points;
-          _isSearchButtonLoading = false; // Désactiver le loader
+          _isSearchButtonLoading = false;
         });
       } else {
         setState(() {
           _markers = {};
           _points = [];
-          _isSearchButtonLoading = false; // Désactiver le loader
+          _isSearchButtonLoading = false;
         });
       }
     } catch (e) {
       setState(() {
         _markers = {};
         _points = [];
-        _isSearchButtonLoading = false; // Désactiver le loader
+        _isSearchButtonLoading = false;
       });
     }
   }
@@ -300,7 +292,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
     final canvas = Canvas(recorder);
     final markerSize = Size(size, size);
 
-    // Fond blanc avec coins arrondis (4px)
     final paint = Paint()..color = Colors.white;
     final rrect = RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size, size), Radius.circular(4));
     canvas.drawRRect(rrect, paint);
@@ -323,7 +314,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
           );
         }
     } catch (e) {
-      // En cas d'erreur, le marker reste blanc
+      return BitmapDescriptor.defaultMarker;
     }
 
     final picture = recorder.endRecording();
@@ -346,14 +337,14 @@ class _HomeMapPageState extends State<HomeMapPage> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return GestureDetector(
-          onTap: () => Navigator.of(context).pop(), // Ferme la modale au clic sur l'arrière-plan
+          onTap: () => Navigator.of(context).pop(),
           child: Container(
             width: double.infinity,
             height: MediaQuery.of(context).size.height,
             color: Colors.transparent,
             child: Center(
               child: GestureDetector(
-                onTap: () {}, // Empêche la propagation du clic sur la modale
+                onTap: () {},
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final modalWidth = constraints.maxWidth * 0.8;
@@ -363,7 +354,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
                       Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Image en haut
                           Container(
                             width: modalWidth,
                             height: 200,
@@ -379,7 +369,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
                             ),
                             child: Stack(
                               children: [
-                                // Badge distance
                                 Positioned(
                                   right: 4,
                                   bottom: 4,
@@ -414,7 +403,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
                               ],
                             ),
                           ),
-                          // Bloc blanc en dessous
                           Container(
                             width: modalWidth,
                             decoration: BoxDecoration(
@@ -629,7 +617,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
     if (!hasCenteredOnce && _currentLocation != null) {
       _mapController!.moveCamera(CameraUpdate.newLatLngZoom(_currentLocation!, 12.0));
       hasCenteredOnce = true;
-      // Charger les points pour la position initiale avec un zoom cohérent
       _loadMarkersFromApi(centerLat: _currentLocation!.latitude, centerLng: _currentLocation!.longitude, zoom: 12.0);
     }
   }
@@ -701,7 +688,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
           ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
-                // GoogleMap en premier (en dessous)
                 GoogleMap(
                   initialCameraPosition: CameraPosition(
                     target: _currentLocation!,
@@ -734,14 +720,13 @@ class _HomeMapPageState extends State<HomeMapPage> {
                   mapType: MapType.normal,
                   markers: _markers,
                 ),
-                // Suggestions APRÈS pour être au-dessus (z-index élevé)
                 if (widget.search.isNotEmpty)
                   Positioned(
                     left: 16,
                     right: 16,
                     top: 0,
                     child: Material(
-                      elevation: 12, // z-index élevé
+                      elevation: 12,
                       borderRadius: BorderRadius.vertical(bottom: Radius.circular(10)),
                       child: Container(
                         decoration: BoxDecoration(
@@ -851,11 +836,9 @@ class _HomeMapPageState extends State<HomeMapPage> {
                         );
                         setState(() {
                           _isCenteredOnUser = true;
-                          // Réinitialiser la position d'origine quand l'utilisateur revient à sa position
                           if (_currentLocation != null) {
                             _originalLocation = _currentLocation;
                           }
-                          // Masquer le bouton de recherche quand on revient à la position d'origine
                           _showSearchHereButton = false;
                         });
                       }

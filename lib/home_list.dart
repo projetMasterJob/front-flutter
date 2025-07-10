@@ -213,7 +213,7 @@ class _HomeListPageState extends State<HomeListPage> {
   Widget build(BuildContext context) {
     final List<Map> items = _filteredAndSortedItems();
     return Container(
-      color: Color(0xFFF5F5F5), // whitesmoke
+      color: Color(0xFFF5F5F5),
       child: isLoading
           ? Center(child: CircularProgressIndicator())
           : ListView.builder(

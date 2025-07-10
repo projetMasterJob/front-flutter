@@ -247,12 +247,12 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                   Image.asset('assets/images/mallette.png', width: 24, height: 24),
                                 ],
                               ),
-                              SizedBox(height: 16), // Marge entre titre et description
+                              SizedBox(height: 16),
                               Text(
                                 jobData?['description'] ?? '',
                                 style: TextStyle(fontSize: 13, color: Colors.grey[800]),
                               ),
-                              SizedBox(height: 16), // Marge entre description et badges
+                              SizedBox(height: 16),
                               Row(
                                 children: [
                                   if (salary.isNotEmpty)
@@ -284,7 +284,7 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                 ],
                               ),
                               if (postedAt.isNotEmpty) ...[
-                                SizedBox(height: 16), // Marge entre badges et date
+                                SizedBox(height: 16),
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: Row(
@@ -351,7 +351,12 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                 ),
                               ),
                               ElevatedButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  final String? companyId = jobData?['company_id'];
+                                  if (companyId != null) {
+                                    Navigator.of(context).pushNamed('/detail_company', arguments: companyId);
+                                  }
+                                },
                                 child: Text("Voir plus"),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue[700],
@@ -390,12 +395,12 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                   Image.asset('assets/images/candidature.png', width: 24, height: 24),
                                 ],
                               ),
-                              SizedBox(height: 16), // Marge entre titre et texte explication
+                              SizedBox(height: 16), 
                               Text(
                                 "Expliquez en quelques mots pourquoi ce poste vous intéresse. L'agence concernée vous contactera si votre profil correspond à l'offre proposée.",
                                 style: TextStyle(fontSize: 13, color: Colors.grey[800]),
                               ),
-                              SizedBox(height: 16), // Marge entre texte explication et message info
+                              SizedBox(height: 16),
                               Container(
                                 decoration: BoxDecoration(
                                   color: Color(0xFFE3F0FF),
@@ -415,7 +420,7 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                   ],
                                 ),
                               ),
-                              SizedBox(height: 16), // Marge entre message info et textarea
+                              SizedBox(height: 16),
                               TextField(
                                 minLines: 3,
                                 maxLines: 5,
@@ -431,7 +436,7 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 16), // Marge entre textarea et bouton
+                              SizedBox(height: 16),
                               SizedBox(
                                 width: double.infinity,
                                 height: 48,
