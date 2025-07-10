@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SignInScreen extends StatefulWidget {
   @override
@@ -16,6 +18,56 @@ class _SignInScreenState extends State<SignInScreen> {
 
   bool isCompany = false;
 
+  Future<void> SignInUser(String first_name, String last_name, String email, String password, String address, String phone) async {
+    final url = Uri.parse('https://7f0385706372.ngrok-free.app/api/auth/register');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'first_name': first_name, 
+                          'last_name': last_name, 
+                          'email': email, 
+                          'password': password, 
+                          'address': address, 
+                          'phone': phone, 
+                          'role': isCompany
+                        }),
+      );
+
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        print('Inscription réussie ! Données : $data');
+        // Navigator.pushReplacement... etc
+      } else {
+        // Affiche une erreur à l'utilisateur
+        print('Erreur inscription : ${response.body}');
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text('Erreur'),
+            content: Text("Échec de l'inscription. Vérifie tes identifiants."),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: Text('OK')),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      print('Erreur réseau : $e');
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text('Erreur réseau'),
+          content: Text('Impossible de se connecter au serveur.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: Text('OK')),
+          ],
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,7 +81,7 @@ class _SignInScreenState extends State<SignInScreen> {
               child: Column(
                 children: [
                   Image.asset(
-                    'assets/images/logo.png', // ton logo
+                    'assets/images/logo.png',
                     height: 250,
                   ),
                 ],
@@ -38,7 +90,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
             SizedBox(height: 20),
 
-            // Switch "Êtes-vous une entreprise ?"
+            // Switch enreprise
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Row(
@@ -137,7 +189,14 @@ class _SignInScreenState extends State<SignInScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: ElevatedButton(
                 onPressed: () {
-                  print("Inscription validée");
+                  SignInUser(
+                    firstNameController.text,
+                    lastNameController.text,
+                    emailController.text,
+                    passwordController.text,
+                    adresseController.text,
+                    phoneController.text,
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
