@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'services/location_service.dart';
 import 'home_tab.dart';
 import 'models/point.dart';
+import 'skeleton_loader.dart';
 
 class HomeListPage extends StatefulWidget {
   final String search;
@@ -132,6 +133,14 @@ class _HomeListPageState extends State<HomeListPage> {
                     width: 50,
                     height: 50,
                     fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return SkeletonLoader(
+                        width: 50,
+                        height: 50,
+                        borderRadius: BorderRadius.circular(8),
+                      );
+                    },
                     errorBuilder: (c, e, s) => Container(
                       width: 50,
                       height: 50,

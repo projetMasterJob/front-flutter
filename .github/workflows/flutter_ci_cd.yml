@@ -1,0 +1,55 @@
+# name: Flutter CI/CD
+
+# on:
+#   push:
+#     branches: [ carte ]
+
+# jobs:
+#   analyze:
+#     name: Analyse du code
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#       - name: Set up Flutter
+#         uses: subosito/flutter-action@v2
+#         with:
+#           flutter-version: '3.10.0'
+#       - name: Install dependencies
+#         run: flutter pub get
+#       - name: Analyze
+#         run: flutter analyze
+
+#   test:
+#     name: Tests unitaires
+#     runs-on: ubuntu-latest
+#     needs: analyze
+#     steps:
+#       - uses: actions/checkout@v3
+#       - name: Set up Flutter
+#         uses: subosito/flutter-action@v2
+#         with:
+#           flutter-version: '3.10.0'
+#       - name: Install dependencies
+#         run: flutter pub get
+#       - name: Run unit tests
+#         run: flutter test
+
+#   build-apk:
+#     name: Build APK Android
+#     runs-on: ubuntu-latest
+#     needs: test
+#     steps:
+#       - uses: actions/checkout@v3
+#       - name: Set up Flutter
+#         uses: subosito/flutter-action@v2
+#         with:
+#           flutter-version: '3.10.0'
+#       - name: Install dependencies
+#         run: flutter pub get
+#       - name: Build APK
+#         run: flutter build apk --release
+#       - name: Upload APK artifact
+#         uses: actions/upload-artifact@v3
+#         with:
+#           name: app-release.apk
+#           path: build/app/outputs/flutter-apk/app-release.apk

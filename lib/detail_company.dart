@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'skeleton_loader.dart';
 
 class DetailCompanyPage extends StatefulWidget {
   final String? companyId;
@@ -362,11 +363,11 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                   jobs.isEmpty
                       ? Text("Aucun poste proposé actuellement.", style: TextStyle(color: Colors.grey[700]))
                       : SizedBox(
-                          height: 280,
+                          height: 260,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             itemCount: jobs.length,
-                            separatorBuilder: (c, i) => SizedBox(width: 18),
+                            separatorBuilder: (c, i) => SizedBox(width: 14),
                             itemBuilder: (context, i) {
                               final job = jobs[i];
                               final DateTime? postedAt = job['posted_at'] != null ? DateTime.tryParse(job['posted_at']) : null;
@@ -374,9 +375,9 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                               final String jobType = job['job_type'] == 'full_time' ? 'Temps plein' : (job['job_type'] == 'part_time' ? 'Temps partiel' : '');
                               final String salary = job['salary'] != null ? '${job['salary'].toString().replaceAll('.0','')}€ / mois' : '';
                               return Container(
-                                width: 270,
-                                height: 280,
-                                margin: EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+                                width: 210,
+                                height: 210,
+                                margin: EdgeInsets.symmetric(horizontal: 2, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(10),
@@ -387,16 +388,24 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                                     // Image de fond
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
-                                      child: Image.network(
-                                        job['image_url'] ?? '',
-                                        width: 270,
-                                        height: 280,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (c, e, s) => Container(
-                                          width: 270,
-                                          height: 280,
-                                          color: Colors.grey[200],
-                                          child: Icon(Icons.image, color: Colors.grey[400]),
+                                      child: SizedBox(
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                        child: Image.network(
+                                          job['image_url'] ?? '',
+                                          fit: BoxFit.cover,
+                                          loadingBuilder: (context, child, loadingProgress) {
+                                            if (loadingProgress == null) return child;
+                                            return SkeletonLoader(
+                                              width: double.infinity,
+                                              height: double.infinity,
+                                              borderRadius: BorderRadius.circular(10),
+                                            );
+                                          },
+                                          errorBuilder: (c, e, s) => Container(
+                                            color: Colors.grey[200],
+                                            child: Icon(Icons.image, color: Colors.grey[400]),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -417,7 +426,6 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                                           ),
                                         ),
                                       ),
-                                    // Bloc blanc superposé moitié basse
                                     Positioned(
                                       left: 0,
                                       right: 0,
@@ -427,58 +435,60 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                                         child: Container(
                                           height: 140,
                                           decoration: BoxDecoration(
-                                            color: Color(0xFFF5F5F5),
+                                            color: Color(0xFFFFFFFF),
                                             borderRadius: BorderRadius.all(Radius.circular(10)),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(0.18),
+                                                color: Colors.black.withOpacity(0.2),
                                                 blurRadius: 4,
                                                 offset: Offset(0, -1),
                                               ),
                                             ],
                                           ),
                                           child: Padding(
-                                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                                            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                                             child: Column(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Text(
                                                   job['title'] ?? '',
-                                                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 20, color: Colors.black),
-                                                  maxLines: 2,
+                                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black),
+                                                  maxLines: 4,
                                                   overflow: TextOverflow.ellipsis,
                                                 ),
-                                                SizedBox(height: 12),
+                                                SizedBox(height: 6),
                                                 Row(
                                                   children: [
                                                     if (jobType.isNotEmpty)
-                                                      Text(jobType, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.grey[800])),
+                                                      Text(jobType, style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13, color: Colors.grey[800])),
                                                     if (jobType.isNotEmpty && salary.isNotEmpty)
                                                       Padding(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                                                        child: Text('•', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                                                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                                                        child: Text('•', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
                                                       ),
                                                     if (salary.isNotEmpty)
-                                                      Text(salary, style: TextStyle(fontSize: 15, color: Color(0xFF1976D2), fontWeight: FontWeight.w500)),
+                                                      Text(salary, style: TextStyle(fontSize: 13, color: Color(0xFF1976D2), fontWeight: FontWeight.w500)),
                                                   ],
                                                 ),
                                                 Spacer(),
                                                 SizedBox(
                                                   width: double.infinity,
-                                                  height: 44,
+                                                  height: 34,
                                                   child: ElevatedButton(
                                                     onPressed: () {
                                                       Navigator.of(context).pushNamed('/detail_job', arguments: job['id']);
                                                     },
-                                                    child: Text("Voir plus", style: TextStyle(fontSize: 17)),
+                                                    child: Text("Voir plus", style: TextStyle(fontSize: 15)),
                                                     style: ElevatedButton.styleFrom(
                                                       backgroundColor: Color(0xFF1976D2),
                                                       foregroundColor: Colors.white,
                                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                                       elevation: 0,
+                                                      padding: EdgeInsets.symmetric(vertical: 0),
                                                     ),
                                                   ),
                                                 ),
+                                                SizedBox(height: 0),
                                               ],
                                             ),
                                           ),
@@ -518,4 +528,4 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
       ),
     );
   }
-} 
+}
