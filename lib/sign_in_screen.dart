@@ -7,150 +7,170 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   // Controllers pour gérer les champs de texte
-  final TextEditingController lastNameController = TextEditingController();
   final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController adresseController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
 
+  bool isCompany = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              // Logo en haut
-              Padding(
-                padding: EdgeInsets.only(top: 50), // Ajuste l'espacement
-                child: Center(
-                  child: Image.asset(
-                    'assets/images/logo_home.png',
-                    width: 150,
-                    height: 150,
+      backgroundColor: const Color(0xFFF5FCF9),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Logo
+            SizedBox(height: 30),
+            Center(
+              child: Column(
+                children: [
+                  Image.asset(
+                    'assets/images/logo.png', // ton logo
+                    height: 250,
                   ),
-                ),
+                ],
               ),
+            ),
 
-              // Espacement entre l'image et les champs
-              SizedBox(height: 30),
+            SizedBox(height: 20),
 
-              // Champ nom
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: TextField(
-                  controller: lastNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Nom',
-                    border: OutlineInputBorder(),
+            // Switch "Êtes-vous une entreprise ?"
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Row(
+                children: [
+                  Text(
+                    "Êtes-vous une entreprise ?",
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                ),
-              ),
-              SizedBox(height: 20),
-
-              // Champ prénom
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: TextField(
-                  controller: firstNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Prénom',
-                    border: OutlineInputBorder(),
+                  Spacer(),
+                  Switch(
+                    value: isCompany,
+                    onChanged: (value) {
+                      setState(() {
+                        isCompany = value;
+                      });
+                    },
                   ),
-                ),
+                ],
               ),
-              SizedBox(height: 20),
+            ),
 
-              // Champ adresse
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: TextField(
-                  controller: adresseController,
-                  decoration: InputDecoration(
-                    labelText: 'Adresse',
-                    border: OutlineInputBorder(),
+            // Formulaire scrollable
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 255, 255, 255),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ),
-              ),
-              SizedBox(height: 20),
-
-              // Champ téléphone
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: TextField(
-                  controller: phoneController,
-                  decoration: InputDecoration(
-                    labelText: 'Numéro de téléphone',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.phone),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: firstNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Prénom',
+                          hintText: 'votre prénom',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      TextField(
+                        controller: lastNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Nom de famille',
+                          hintText: 'votre nom de famille',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      TextField(
+                        controller: adresseController,
+                        decoration: InputDecoration(
+                          labelText: 'Adresse postale',
+                          hintText: 'votre adresse postale',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      TextField(
+                        controller: phoneController,
+                        keyboardType: TextInputType.phone,
+                        decoration: InputDecoration(
+                          labelText: 'Téléphone',
+                          hintText: 'votre numéro de téléphone',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      TextField(
+                        controller: emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Adresse mail',
+                          hintText: 'votre adresse mail',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      TextField(
+                        controller: passwordController,
+                        decoration: InputDecoration(
+                          labelText: 'Mot de passe',
+                          hintText: 'votre mot de passe',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-              SizedBox(height: 20),
-
-              // Champ email
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: TextField(
-                  controller: emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Adresse Email',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-
-              // Champ mot de passe
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: TextField(
-                  controller: passwordController,
-                  obscureText: true, // Cache le texte du mot de passe
-                  decoration: InputDecoration(
-                    labelText: 'Mot de Passe',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
-                  ),
-                ),
-              ),
-              SizedBox(height: 30),
-
-              // Bouton de connexion
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Ajouter ici la logique de connexion
-                    print("Inscription");
-                  },
-                  child: Text("Valider votre inscription"),
-                ),
-              ),
-            ],
-          ),
-
-          // Bouton "Mentions légales" en bas
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              width: double.infinity,
-              color: Colors.grey[200],
-              padding: EdgeInsets.symmetric(vertical: 15),
-              child: TextButton(
-                onPressed: () {
-                  print("Mentions légales");
-                },
-                child: Text(
-                  "Mentions légales",
-                  style: TextStyle(fontSize: 16, color: Colors.blue),
                 ),
               ),
             ),
-          ),
-        ],
+
+            // Bouton inscription
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: ElevatedButton(
+                onPressed: () {
+                  print("Inscription validée");
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  minimumSize: Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  "Inscription",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                width: double.infinity,
+                color: Colors.grey[200],
+                padding: EdgeInsets.symmetric(vertical: 15),
+                child: TextButton(
+                  onPressed: () {
+                    print("Mentions légales");
+                  },
+                  child: Text(
+                    "Mentions légales",
+                    style: TextStyle(fontSize: 16, color: Colors.blue),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
