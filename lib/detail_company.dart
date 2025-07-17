@@ -356,7 +356,7 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    "Retrouvez ici toutes les offres d'emploi proposées par ${companyName}. Postulez directement à celles qui vous intéressent !",
+                    "Retrouvez ici toutes les offres d'emploi actuellement proposées par ${companyName}. Postulez directement à celles qui vous intéressent !",
                     style: TextStyle(fontSize: 13, color: Colors.grey[800]),
                   ),
                   SizedBox(height: 16),

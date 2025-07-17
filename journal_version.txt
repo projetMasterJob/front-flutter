@@ -1,6 +1,1 @@
-Version 2.0.0
-Description : modification du texte de description
-
-Version 1.1.0
-Description : ajout du versionning
 
