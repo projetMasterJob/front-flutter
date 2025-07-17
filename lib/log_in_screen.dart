@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:front_flutter/sign_in_screen.dart';
+import 'list_chat.dart';
 
 class LogInScreen extends StatefulWidget {
   @override
@@ -15,8 +16,11 @@ class _LogInScreenState extends State<LogInScreen> {
   bool _isLoading = false;
 
   Future<void> loginUser(String email, String password) async {
-    setState(() { _isLoading = true; });
-    final url = Uri.parse('https://3e75-2001-861-44c2-15b0-8507-f178-6801-b974.ngrok-free.app/api/auth/login');
+    setState(() {
+      _isLoading = true;
+    });
+    final url = Uri.parse(
+        'https://3e75-2001-861-44c2-15b0-8507-f178-6801-b974.ngrok-free.app/api/auth/login');
 
     try {
       final response = await http.post(
@@ -40,7 +44,8 @@ class _LogInScreenState extends State<LogInScreen> {
             title: Text('Erreur'),
             content: Text('Échec de la connexion. Vérifie tes identifiants.'),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: Text('OK')),
+              TextButton(
+                  onPressed: () => Navigator.pop(context), child: Text('OK')),
             ],
           ),
         );
@@ -53,12 +58,15 @@ class _LogInScreenState extends State<LogInScreen> {
           title: Text('Erreur réseau'),
           content: Text('Impossible de se connecter au serveur.'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text('OK')),
+            TextButton(
+                onPressed: () => Navigator.pop(context), child: Text('OK')),
           ],
         ),
       );
     } finally {
-      setState(() { _isLoading = false; });
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -159,6 +167,28 @@ class _LogInScreenState extends State<LogInScreen> {
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ListChat(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                "Chat",
+                style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
+            ),
 
             SizedBox(height: 100),
 
@@ -206,14 +236,14 @@ class _LogInScreenState extends State<LogInScreen> {
               ),
             ),
             if (_isLoading)
-            Container(
-              color: Colors.black.withOpacity(0.5),
-              child: Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              Container(
+                color: Colors.black.withOpacity(0.5),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
