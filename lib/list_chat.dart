@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer';
+import 'chat_detail.dart';
 
 class ListChat extends StatefulWidget {
   const ListChat({super.key});
@@ -85,7 +86,17 @@ class _ListChatState extends State<ListChat> {
                             subtitle: Text('Date : $createdAt'),
                             trailing: const Icon(Icons.chat_bubble_outline),
                             onTap: () {
-                              // TODO: Ajouter navigation vers la conversation
+                              final chatId = chat['id'];
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChatDetail(
+                                    chatId: chatId,
+                                    userId:
+                                        userId, // tu peux passer le userId défini dans _ListChatState
+                                  ),
+                                ),
+                              );
                             },
                           ),
                         );
