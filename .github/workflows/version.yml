@@ -49,7 +49,7 @@ for i, line in enumerate(lines):
 else:
     print('Aucune version trouvée dans pubspec.yaml')
     sys.exit(1)
-match = re.match(r'version: (\d+)\.(\d+)\.(\d+)+\+(\d+)', version_line)
+match = re.match(r'version: (\d+)\.(\d+)\.(\d+)\+(\d+)', version_line)
 if not match:
     print('Format de version non reconnu')
     sys.exit(1)
