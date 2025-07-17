@@ -31,10 +31,9 @@ jobs:
           echo "type=$TYPE" >> $GITHUB_OUTPUT
           echo "description=$DESC" >> $GITHUB_OUTPUT
 
-      - name: Incrémenter la version dans pubspec.yaml
-        id: bump
+      - name: Créer le script d'incrémentation
         run: |
-          python3 <<'EOF'
+          cat << 'PYTHON' > bump_version.py
 import re
 import sys
 import os
@@ -75,7 +74,11 @@ print(f'Nouvelle version: {major}.{minor}.{patch}+{build}')
 tmp = open('new_version.txt', 'w')
 tmp.write(f'{major}.{minor}.{patch}')
 tmp.close()
-EOF
+PYTHON
+
+      - name: Incrémenter la version dans pubspec.yaml
+        id: bump
+        run: python3 bump_version.py
         env:
           TYPE_BUMP: ${{ steps.commitmsg.outputs.type }}
 
