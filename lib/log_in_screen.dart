@@ -90,7 +90,7 @@ class _LogInScreenState extends State<LogInScreen> {
               padding: EdgeInsets.symmetric(vertical: 15),
               child: TextButton(
                 onPressed: () {
-                  print("Mentions légales");
+                  print("Mentions légales...");
                 },
                 child: Text(
                   "Mentions légales",
