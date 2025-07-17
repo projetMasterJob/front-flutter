@@ -61,6 +61,8 @@ jobs:
 
       - name: Commit et push la nouvelle version et le journal
         run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add pubspec.yaml journal_version.txt
           git commit -m "chore: bump version et journal [ci skip]"
           git push 
