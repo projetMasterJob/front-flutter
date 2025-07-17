@@ -1,3 +1,6 @@
+Version 1.1.0
+Description : ajout d'une fonction test
+
 Version 1.0.1
 Description : optimisation diverses
 
