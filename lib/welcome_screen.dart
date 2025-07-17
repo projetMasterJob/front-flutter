@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'list_chat.dart';
 
 class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +18,8 @@ class WelcomeScreen extends StatelessWidget {
             children: [
               // Image placée en haut
               Padding(
-                padding: EdgeInsets.only(top: 50), // Ajuste la hauteur depuis le haut
+                padding: EdgeInsets.only(
+                    top: 50), // Ajuste la hauteur depuis le haut
                 child: Center(
                   child: Image.asset(
                     'assets/images/logo_home.png',
@@ -40,7 +42,7 @@ class WelcomeScreen extends StatelessWidget {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => ChatScreen()),
+                            MaterialPageRoute(builder: (context) => ListChat()),
                           );
                         },
                         child: Text("Se connecter"),
