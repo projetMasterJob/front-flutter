@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:front_flutter/sign_in_screen.dart';
 import 'list_chat.dart';
+import 'home_tab.dart';
 
 class LogInScreen extends StatefulWidget {
   @override
@@ -34,6 +35,10 @@ class _LogInScreenState extends State<LogInScreen> {
         final data = jsonDecode(response.body);
         // Par exemple, sauvegarder le token, naviguer, etc.
         print('Connexion réussie ! Données : $data');
+         Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomeTabPage()),
+        );
         // Navigator.pushReplacement... etc
       } else {
         // Affiche une erreur à l'utilisateur
