@@ -36,7 +36,7 @@ class _LogInScreenState extends State<LogInScreen> {
         final data = jsonDecode(response.body);
         // Par exemple, sauvegarder le token, naviguer, etc.
         print('Connexion réussie ! Données : $data');
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomeTabPage()),
         );
@@ -168,7 +168,7 @@ class _LogInScreenState extends State<LogInScreen> {
                 //     passwordController.text,
                 //   );
                 // }
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => HomeTabPage()),
                 );

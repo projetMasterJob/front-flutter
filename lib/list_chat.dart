@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer';
 import 'chat_detail.dart';
+import 'menu_bottom.dart';
 
 class ListChat extends StatefulWidget {
   const ListChat({super.key});
@@ -102,6 +103,7 @@ class _ListChatState extends State<ListChat> {
                         );
                       },
                     ),
+      bottomNavigationBar: MenuBottom(selectedIndex: 1),
     );
   }
 }

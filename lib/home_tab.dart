@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_map.dart';
 import 'home_list.dart';
+import 'menu_bottom.dart';
 
 enum ListSortOption {
   nameAZ,
@@ -188,6 +189,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
           ],
         ),
       ),
+      bottomNavigationBar: MenuBottom(),
     );
   }
 }
