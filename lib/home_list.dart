@@ -10,7 +10,8 @@ import 'skeleton_loader.dart';
 class HomeListPage extends StatefulWidget {
   final String search;
   final ListSortOption sort;
-  const HomeListPage({Key? key, required this.search, required this.sort}) : super(key: key);
+  final void Function(String type, {String? id})? onNavigateToDetail;
+  const HomeListPage({Key? key, required this.search, required this.sort, this.onNavigateToDetail}) : super(key: key);
 
   @override
   _HomeListPageState createState() => _HomeListPageState();
@@ -100,10 +101,8 @@ class _HomeListPageState extends State<HomeListPage> {
     const double badgeMinWidth = 70;
     return InkWell(
       onTap: () {
-        if (point.entity_type == 'company') {
-          Navigator.of(context).pushNamed('/detail_company', arguments: point.id);
-        } else if (point.entity_type == 'job') {
-          Navigator.of(context).pushNamed('/detail_job', arguments: point.id);
+        if (widget.onNavigateToDetail != null) {
+          widget.onNavigateToDetail!(point.entity_type, id: point.id);
         }
       },
       child: Container(

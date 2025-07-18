@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_map.dart';
 import 'home_list.dart';
-import 'menu_bottom.dart';
 
 enum ListSortOption {
   nameAZ,
@@ -11,6 +10,9 @@ enum ListSortOption {
 }
 
 class HomeTabPage extends StatefulWidget {
+  final void Function(String type, {String? id})? onNavigateToDetail;
+  const HomeTabPage({Key? key, this.onNavigateToDetail}) : super(key: key);
+
   @override
   State<HomeTabPage> createState() => _HomeTabPageState();
 }
@@ -182,14 +184,17 @@ class _HomeTabPageState extends State<HomeTabPage> {
                       });
                     },
                   ),
-                  HomeListPage(search: _search, sort: _sort),
+                  HomeListPage(
+                    search: _search,
+                    sort: _sort,
+                    onNavigateToDetail: widget.onNavigateToDetail,
+                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: MenuBottom(),
     );
   }
 }

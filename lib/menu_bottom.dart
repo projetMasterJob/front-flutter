@@ -1,30 +1,9 @@
 import 'package:flutter/material.dart';
-import 'list_chat.dart';
-import 'home_tab.dart';
 
 class MenuBottom extends StatelessWidget {
-    final int selectedIndex;
-    const MenuBottom({Key? key, this.selectedIndex = -1}) : super(key: key);
-
-    void _handleTap(BuildContext context, int index) {
-    if (index == 0) {
-        Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => HomeTabPage()),
-        );
-    }
-    if (index == 1) {
-        Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => ListChat()),
-        );
-    }
-    if (index == 2) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Bientot disponible.")),
-        );
-    }
-}
+  final int selectedIndex;
+  final Function(int) onTabSelected;
+  const MenuBottom({Key? key, required this.selectedIndex, required this.onTabSelected}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +41,7 @@ class MenuBottom extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(24),
-          onTap: () => _handleTap(context, index),
+          onTap: () => onTabSelected(index),
           child: Center(
             child: Icon(
               icon,

@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:front_flutter/sign_in_screen.dart';
 import 'home_tab.dart';
+import 'template.dart';
 
 class LogInScreen extends StatefulWidget {
   @override
@@ -36,9 +37,10 @@ class _LogInScreenState extends State<LogInScreen> {
         final data = jsonDecode(response.body);
         // Par exemple, sauvegarder le token, naviguer, etc.
         print('Connexion réussie ! Données : $data');
+        // Navigation après connexion :
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeTabPage()),
+          MaterialPageRoute(builder: (context) => TemplatePage(selectedIndex: 0)),
         );
         // Navigator.pushReplacement... etc
       } else {
@@ -170,7 +172,7 @@ class _LogInScreenState extends State<LogInScreen> {
                 // }
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => HomeTabPage()),
+                  MaterialPageRoute(builder: (context) => TemplatePage(selectedIndex: 0)),
                 );
               },
               style: ElevatedButton.styleFrom(
