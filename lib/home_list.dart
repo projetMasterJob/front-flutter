@@ -203,8 +203,8 @@ class _HomeListPageState extends State<HomeListPage> {
                         '${distance.toStringAsFixed(2)} km',
                         style: TextStyle(
                           color: Color(0xFF3264E0),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
                       ),
                     ],
