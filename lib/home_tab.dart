@@ -183,6 +183,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
                         _searchController.clear();
                       });
                     },
+                    onNavigateToDetail: widget.onNavigateToDetail,
                   ),
                   HomeListPage(
                     search: _search,

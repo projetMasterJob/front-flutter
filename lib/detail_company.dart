@@ -8,7 +8,9 @@ import 'chat_detail.dart';
 
 class DetailCompanyPage extends StatefulWidget {
   final String? companyId;
-  const DetailCompanyPage({Key? key, this.companyId}) : super(key: key);
+  final void Function(String type, {String? id})? onNavigateToDetail;
+  final VoidCallback? onBack;
+  const DetailCompanyPage({Key? key, this.companyId, this.onNavigateToDetail, this.onBack}) : super(key: key);
 
   @override
   State<DetailCompanyPage> createState() => _DetailCompanyPageState();
@@ -65,6 +67,10 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
     return Scaffold(
       backgroundColor: Color(0xFFF5F5F5),
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: widget.onBack ?? () => Navigator.of(context).pop(),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.black),
@@ -546,7 +552,9 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                                                   height: 34,
                                                   child: ElevatedButton(
                                                     onPressed: () {
-                                                      Navigator.of(context).pushNamed('/detail_job', arguments: job['id']);
+                                                      if (widget.onNavigateToDetail != null) {
+                                                        widget.onNavigateToDetail!('job', id: job['id']);
+                                                      }
                                                     },
                                                     child: Text("Voir plus", style: TextStyle(fontSize: 15)),
                                                     style: ElevatedButton.styleFrom(

@@ -13,7 +13,8 @@ import 'package:url_launcher/url_launcher.dart';
 class HomeMapPage extends StatefulWidget {
   final String search;
   final VoidCallback? onClearSearch;
-  const HomeMapPage({Key? key, required this.search, this.onClearSearch}) : super(key: key);
+  final void Function(String type, {String? id})? onNavigateToDetail;
+  const HomeMapPage({Key? key, required this.search, this.onClearSearch, this.onNavigateToDetail}) : super(key: key);
 
   @override
   State<HomeMapPage> createState() => _HomeMapPageState();
@@ -471,7 +472,82 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 30),
+                                  SizedBox(height: 20),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 110,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          color: Color(0xFF2ECC40),
+                                          borderRadius: BorderRadius.circular(10),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.08),
+                                              blurRadius: 4,
+                                            ),
+                                          ],
+                                        ),
+                                        child: GestureDetector(
+                                          onTap: () => _openMapsNavigation(point),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(Icons.directions, color: Colors.white, size: 18),
+                                              SizedBox(width: 8),
+                                              Text(
+                                                'Itinéraire',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 10),
+                                      Container(
+                                        width: 100,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          color: Color(0xFF3264E0),
+                                          borderRadius: BorderRadius.circular(10),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.08),
+                                              blurRadius: 4,
+                                            ),
+                                          ],
+                                        ),
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.of(context).pop();
+                                            if (widget.onNavigateToDetail != null) {
+                                              widget.onNavigateToDetail!(point.entity_type, id: point.id);
+                                            }
+                                          },
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(Icons.info, color: Colors.white, size: 18),
+                                              SizedBox(width: 8),
+                                              Text(
+                                                'Détails',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ],
                               ),
                             ),
@@ -492,89 +568,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
                             padding: const EdgeInsets.all(6),
                             child: const Icon(Icons.close, size: 22, color: Colors.grey),
                           ),
-                        ),
-                      ),
-                      // Boutons en bas
-                      Positioned(
-                        bottom: -20,
-                        left: 0,
-                        right: 0,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 120,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Color(0xFF2ECC40),
-                                borderRadius: BorderRadius.circular(10),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.08),
-                                    blurRadius: 4,
-                                  ),
-                                ],
-                              ),
-                              child: GestureDetector(
-                                onTap: () => _openMapsNavigation(point),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.directions, color: Colors.white, size: 16),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Itinéraire',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 10),
-                            Container(
-                              width: 120,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Color(0xFF3264E0),
-                                borderRadius: BorderRadius.circular(10),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.08),
-                                    blurRadius: 4,
-                                  ),
-                                ],
-                              ),
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.of(context).pop();
-                                  if (point.entity_type == 'company') {
-                                    Navigator.of(context).pushNamed('/detail_company', arguments: point.id);
-                                  } else if (point.entity_type == 'job') {
-                                    Navigator.of(context).pushNamed('/detail_job', arguments: point.id);
-                                  }
-                                },
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.info, color: Colors.white, size: 16),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Voir plus',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ],
@@ -712,7 +705,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                   myLocationEnabled: true,
                   myLocationButtonEnabled: false,
                   compassEnabled: false,
-                  zoomControlsEnabled: true,
+                  zoomControlsEnabled: false,
                   zoomGesturesEnabled: true,
                   rotateGesturesEnabled: true,
                   tiltGesturesEnabled: true,

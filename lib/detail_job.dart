@@ -6,7 +6,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 class DetailJobPage extends StatefulWidget {
   final String? jobId;
-  const DetailJobPage({Key? key, this.jobId}) : super(key: key);
+  final void Function(String type, {String? id})? onNavigateToDetail;
+  final VoidCallback? onBack;
+  const DetailJobPage({Key? key, this.jobId, this.onNavigateToDetail, this.onBack}) : super(key: key);
 
   @override
   State<DetailJobPage> createState() => _DetailJobPageState();
@@ -72,6 +74,10 @@ class _DetailJobPageState extends State<DetailJobPage> {
     return Scaffold(
       backgroundColor: Color(0xFFF5F5F5),
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: widget.onBack ?? () => Navigator.of(context).pop(),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.black),
@@ -354,7 +360,9 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                 onPressed: () {
                                   final String? companyId = jobData?['company_id'];
                                   if (companyId != null) {
-                                    Navigator.of(context).pushNamed('/detail_company', arguments: companyId);
+                                    if (widget.onNavigateToDetail != null) {
+                                      widget.onNavigateToDetail!('company', id: companyId);
+                                    }
                                   }
                                 },
                                 child: Text("Voir plus"),
