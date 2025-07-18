@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'skeleton_loader.dart';
+import 'chat_detail.dart';
 
 class DetailCompanyPage extends StatefulWidget {
   final String? companyId;
@@ -17,6 +18,7 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
   Map<String, dynamic>? companyData;
   bool isLoading = true;
   String? error;
+  bool isLoadingMessage = false;
 
   @override
   void didChangeDependencies() {
@@ -277,9 +279,77 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                       children: [
                         _buildCircleIconButton(Icons.phone, Colors.green, onPressed: () {}),
                         SizedBox(width: 16),
-                        _buildCircleIconButton(Icons.picture_as_pdf, Colors.red, onPressed: () {}),
+                        _buildCircleIconButton(
+                          Icons.picture_as_pdf,
+                          Colors.red,
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Bientôt disponible")),
+                            );
+                          },
+                        ),
                         SizedBox(width: 16),
-                        _buildCircleIconButton(Icons.message, Colors.blue, onPressed: () {}),
+                        isLoadingMessage
+                            ? SizedBox(
+                                width: 44,
+                                height: 44,
+                                child: Center(child: CircularProgressIndicator(strokeWidth: 3)),
+                              )
+                            : _buildCircleIconButton(
+                                Icons.message,
+                                Colors.blue,
+                                onPressed: () async {
+                                  setState(() { isLoadingMessage = true; });
+                                  const userId = '9d6ebe6f-8547-42ea-99f6-c65367c4c1c6';
+                                  final companyId = widget.companyId ?? companyData?['id'];
+                                  if (companyId == null) {
+                                    setState(() { isLoadingMessage = false; });
+                                    print("Erreur : companyId introuvable.");
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text("Erreur : companyId introuvable.")),
+                                    );
+                                    return;
+                                  }
+                                  try {
+                                    final response = await http.get(Uri.parse('http://10.0.2.2:3001/api/chat/$userId/listes-messages'));
+                                    if (response.statusCode == 200) {
+                                      final List chats = json.decode(response.body);
+                                      final chat = chats.firstWhere(
+                                        (c) => c['company_id'] == companyId,
+                                        orElse: () => null,
+                                      );
+                                      if (chat != null) {
+                                        final chatId = chat['id'];
+                                        setState(() { isLoadingMessage = false; });
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => ChatDetail(
+                                              chatId: chatId,
+                                              userId: userId,
+                                            ),
+                                          ),
+                                        );
+                                      } else {
+                                        setState(() { isLoadingMessage = false; });
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text("Aucune conversation trouvée avec cette entreprise.")),
+                                        );
+                                      }
+                                    } else {
+                                      setState(() { isLoadingMessage = false; });
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text("Erreur lors de la récupération des conversations.")),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    setState(() { isLoadingMessage = false; });
+                                    print("Erreur réseau : $e");
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text("Erreur réseau : $e")),
+                                    );
+                                  }
+                                },
+                              ),
                       ],
                     ),
                   ),

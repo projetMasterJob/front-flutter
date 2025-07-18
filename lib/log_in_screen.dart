@@ -162,12 +162,16 @@ class _LogInScreenState extends State<LogInScreen> {
             // Bouton connexion
             ElevatedButton(
               onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  loginUser(
-                    emailController.text,
-                    passwordController.text,
-                  );
-                }
+                // if (_formKey.currentState!.validate()) {
+                //   loginUser(
+                //     emailController.text,
+                //     passwordController.text,
+                //   );
+                // }
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomeTabPage()),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
