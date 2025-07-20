@@ -14,7 +14,12 @@ class HomeMapPage extends StatefulWidget {
   final String search;
   final VoidCallback? onClearSearch;
   final void Function(String type, {String? id})? onNavigateToDetail;
-  const HomeMapPage({Key? key, required this.search, this.onClearSearch, this.onNavigateToDetail}) : super(key: key);
+  const HomeMapPage({
+    Key? key,
+    required this.search,
+    this.onClearSearch,
+    this.onNavigateToDetail,
+  }) : super(key: key);
 
   @override
   State<HomeMapPage> createState() => _HomeMapPageState();
