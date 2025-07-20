@@ -42,7 +42,6 @@ class _LogInScreenState extends State<LogInScreen> {
           context,
           MaterialPageRoute(builder: (context) => TemplatePage(selectedIndex: 0)),
         );
-        // Navigator.pushReplacement... etc
       } else {
         // Affiche une erreur à l'utilisateur
         print('Erreur de connexion : ${response.body}');
@@ -161,16 +160,12 @@ class _LogInScreenState extends State<LogInScreen> {
             // Bouton connexion
             ElevatedButton(
               onPressed: () {
-                // if (_formKey.currentState!.validate()) {
-                //   loginUser(
-                //     emailController.text,
-                //     passwordController.text,
-                //   );
-                // }
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => TemplatePage(selectedIndex: 0)),
-                );
+                if (_formKey.currentState!.validate()) {
+                  loginUser(
+                    emailController.text,
+                    passwordController.text,
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
