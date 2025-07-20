@@ -36,8 +36,8 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https"
-                    android:host="1f744df5ca11.ngrok-free.app"
-                    android:pathPrefix="/verify-email"/>
+                    android:host="auth-service-kohl.vercel.app"
+                    android:pathPrefix="/api/auth/verify-email"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

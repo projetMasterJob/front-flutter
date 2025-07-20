@@ -27,7 +27,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://1f744df5ca11.ngrok-free.app/api/auth/register'),
+        Uri.parse('https://auth-service-kohl.vercel.app/api/auth/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'first_name': firstName,
