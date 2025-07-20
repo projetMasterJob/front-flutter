@@ -27,7 +27,7 @@ class _LogInScreenState extends State<LogInScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://3e75-2001-861-44c2-15b0-8507-f178-6801-b974.ngrok-free.app/api/auth/login'),
+        Uri.parse('https://1f744df5ca11.ngrok-free.app/api/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
@@ -120,9 +120,6 @@ class _LogInScreenState extends State<LogInScreen> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return "Veuillez entrer votre mot de passe";
-                        }
-                        if (value.length < 6) {
-                          return "Mot de passe trop court";
                         }
                         return null;
                       },
