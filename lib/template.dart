@@ -4,6 +4,7 @@ import 'list_chat.dart';
 import 'menu_bottom.dart';
 import 'detail_job.dart';
 import 'detail_company.dart';
+import 'profil.dart';
 
 class TemplatePage extends StatefulWidget {
   final int selectedIndex;
@@ -31,7 +32,7 @@ class _TemplatePageState extends State<TemplatePage> {
       case 1:
         return ListChat();
       case 2:
-        return Center(child: Text('Profil (à implémenter)', style: TextStyle(fontSize: 20)));
+        return ProfilPage();
       default:
         return Container();
     }
@@ -84,6 +85,7 @@ class _TemplatePageState extends State<TemplatePage> {
             SafeArea(
               child: Container(
                 margin: const EdgeInsets.only(bottom: 0),
+                padding: const EdgeInsets.only(bottom: 70),
                 child: _viewStack.last,
               ),
             ),
