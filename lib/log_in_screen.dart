@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:front_flutter/sign_in_screen.dart';
 import 'home_tab.dart';
 import 'template.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class LogInScreen extends StatefulWidget {
   @override
@@ -33,24 +35,37 @@ class _LogInScreenState extends State<LogInScreen> {
       );
 
       if (response.statusCode == 200) {
-        // Connexion réussie, tu peux décoder le token ou user info ici :
+        // Connexion réussie, décoder le token et les données
         final data = jsonDecode(response.body);
-        // Par exemple, sauvegarder le token, naviguer, etc.
-        print('Connexion réussie ! Données : $data');
-        // Navigation après connexion :
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => TemplatePage(selectedIndex: 0)),
-        );
+        final accessToken = data['accessToken'];
+
+        if (accessToken != null) {
+          try {
+            final decodedToken = JwtDecoder.decode(accessToken);            
+            await _saveUserData(accessToken, decodedToken);
+            await getUserLoginInfos(decodedToken['id'].toString());            
+
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => TemplatePage(selectedIndex: 0)),
+            );
+
+          } catch (e) {
+            setState(() {
+              loginError = "Une erreur est survenue lors de la connexion, veuillez réessayer.";
+            });
+          }
+        } else {
+          setState(() {
+            loginError = "Réponse invalide du serveur";
+          });
+        }
       } else {
-        // Affiche une erreur à l'utilisateur
-        print('Erreur de connexion : ${response.body}');
         setState(() {
           loginError = "Identifiants incorrects";
         });
       }
     } catch (e) {
-      print('Erreur réseau : $e');
       setState(() {
         loginError = "Erreur de connexion au serveur";
       });
@@ -58,6 +73,46 @@ class _LogInScreenState extends State<LogInScreen> {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  // Méthode pour sauvegarder le token et l'ID utilisateur dans SharedPreferences
+  Future<void> _saveUserData(String accessToken, Map<String, dynamic> decodedToken) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      await prefs.setString('access_token', accessToken);
+      
+      final userId = decodedToken['id'].toString();
+      await prefs.setString('user_id', userId);
+
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  // Méthode pour récupérer et sauvegarder les informations utilisateur depuis jobazur-api
+  Future<void> getUserLoginInfos(String userId) async {
+    try {      
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:5000/api/users/$userId'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final userData = jsonDecode(response.body);
+        
+        // Stocker les informations utilisateur dans SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('userinfo', jsonEncode(userData));
+        
+      } else {
+        throw Exception('Erreur lors de la récupération des informations utilisateur');
+      }
+    } catch (e) {
+      throw e;
     }
   }
 
