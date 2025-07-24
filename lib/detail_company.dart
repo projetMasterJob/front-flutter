@@ -147,7 +147,6 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
     final String companyLogo = companyData?['image_url'] ?? '';
     final String address = location['address'] ?? '';
     final String cp = location['cp'] ?? '';
-    final String website = companyData?['website'] ?? '';
     final String description = companyData?['description'] ?? '';
     final List jobs = companyData?['jobs'] ?? [];
 

@@ -32,18 +32,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool showNewPassword = false;
   bool showConfirmPassword = false;
 
-  // Variables pour stocker les valeurs originales
   Map<String, String> originalValues = {};
+  SharedPreferences? _prefs;
 
   @override
   void initState() {
     super.initState();
-    _loadUserInfo();
+    loadUserInfo();
   }
 
-  Future<void> _loadUserInfo() async {
+  // Méthode pour obtenir l'instance de SharedPreferences
+  Future<SharedPreferences> get _prefsInstance async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
+
+  Future<void> loadUserInfo() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _prefsInstance;
       final userInfoJson = prefs.getString('userinfo');
       
       if (userInfoJson != null) {
@@ -381,7 +387,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     try {
       // Récupérer l'ID utilisateur
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _prefsInstance;
       final userId = prefs.getString('user_id');
 
       if (userId == null) {
@@ -463,7 +469,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
         final userInfoJson = jsonDecode(email);
         final userEmail = userInfoJson['email'];
 
-        // Appel API pour vérifier l'ancien mot de passe
         final loginResponse = await http.post(
           Uri.parse('https://auth-service-kohl.vercel.app/api/auth/login'),
           headers: {'Content-Type': 'application/json'},
@@ -497,13 +502,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
         return;
       }
 
-      print('🔍 Champs modifiés : ${updateData.keys.toList()}');
-
-      // Appel API pour mettre à jour l'utilisateur
+      final token = prefs.getString('token');
+      
       final response = await http.put(
         Uri.parse('http://10.0.2.2:5000/api/users/$userId'),
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
         body: jsonEncode(updateData),
       );
@@ -544,27 +549,37 @@ class _EditProfilePageState extends State<EditProfilePage> {
   // Méthode pour rafraîchir les informations utilisateur depuis l'API
   Future<void> refreshUserInfo(String userId) async {
     try {
+      final tokenPrefs = await _prefsInstance;
+      final token = tokenPrefs.getString('token');
+      
       final response = await http.get(
         Uri.parse('http://10.0.2.2:5000/api/users/$userId'),
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
       );
 
       if (response.statusCode == 200) {
         final updatedUserInfo = jsonDecode(response.body);
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('userinfo', jsonEncode(updatedUserInfo));
+        final sharedPrefs = await _prefsInstance;
+        await sharedPrefs.setString('userinfo', jsonEncode(updatedUserInfo));
         
-        print('🔍 Informations utilisateur rafraîchies depuis l\'API');
       } else {
-        print('🔍 Erreur lors du rafraîchissement des informations : ${response.statusCode}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Erreur lors du rafraîchissement des informations, veuillez réessayer plus tard.")),
+        );
       }
     } catch (e) {
-      print('🔍 Erreur lors du rafraîchissement des informations : $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                "Erreur lors du rafraîchissement des informations.")),
+      );
     }
   }
 
+  // Méthode pour libérer les ressources
   @override
   void dispose() {
     firstNameController.dispose();

@@ -22,10 +22,11 @@ class _ProfilPageState extends State<ProfilPage> {
   @override
   void initState() {
     super.initState();
-    _loadUserInfo();
+    loadUserInfo();
   }
 
-  Future<void> _loadUserInfo() async {
+  // Méthode pour récupérer les informations de l'utilisateur
+  Future<void> loadUserInfo() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userInfoJson = prefs.getString('userinfo');
@@ -47,7 +48,8 @@ class _ProfilPageState extends State<ProfilPage> {
     }
   }
 
-  String _formatDate(String dateString) {
+  // Méthode pour formater la date de création du compte
+  String formatDate(String dateString) {
     try {
       final date = DateTime.parse(dateString);
       final months = [
@@ -56,14 +58,13 @@ class _ProfilPageState extends State<ProfilPage> {
       ];
       return 'Membre depuis le ${date.day} ${months[date.month - 1]} ${date.year}';
     } catch (e) {
-      return 'Membre depuis le 20 juillet 2025';
+      return '';
     }
   }
 
-  // Méthode pour se déconnecter
+  // Méthode pour se déconnecter avec une dialog, on supprime les SharedPreferences et on redirige vers la page de login
   Future<void> logout() async {
     try {
-      // Afficher une boîte de dialogue de confirmation
       final shouldLogout = await showDialog<bool>(
         context: context,
         builder: (BuildContext context) {
@@ -85,23 +86,18 @@ class _ProfilPageState extends State<ProfilPage> {
       );
 
       if (shouldLogout == true) {
-        // Supprimer toutes les données des SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.clear();
-        
-        print('🔍 Déconnexion effectuée - SharedPreferences supprimées');
-        
-        // Naviguer vers la page de login sans possibilité de retour
+                
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => LogInScreen()),
-          (route) => false, // Supprime toutes les routes de la pile
+          (route) => false,
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Erreur lors de la déconnexion : $e")),
       );
-      // En cas d'erreur, naviguer quand même vers la page de login
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => LogInScreen()),
         (route) => false,
@@ -110,9 +106,10 @@ class _ProfilPageState extends State<ProfilPage> {
   }
 
   // Méthode pour supprimer le compte
+  // on affiche une dialog de confirmation pour supprimer le compte
+  // ensuite on supprime le compte via l'API et on supprime les SharedPreferences et on redirige vers la page de login
   Future<void> deleteAccount() async {
     try {
-      // Afficher une boîte de dialogue de confirmation
       final shouldDelete = await showDialog<bool>(
         context: context,
         builder: (BuildContext context) {
@@ -134,45 +131,36 @@ class _ProfilPageState extends State<ProfilPage> {
       );
 
       if (shouldDelete == true) {
-        // Récupérer l'ID utilisateur depuis les SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         final userId = prefs.getString('user_id');
         
         if (userId != null) {
-          // Appel API pour supprimer l'utilisateur
+          final token = prefs.getString('token');
+          
           final response = await http.delete(
             Uri.parse('http://10.0.2.2:5000/api/users/$userId'),
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
             },
           );
 
-          print('🔍 Réponse suppression compte - Status: ${response.statusCode}');
-          print('🔍 Réponse suppression compte - Body: ${response.body}');
-
-          if (response.statusCode == 200) {
-            print('🔍 Compte supprimé avec succès');
-          } else {
-            print('🔍 Erreur lors de la suppression du compte : ${response.statusCode}');
+          if (response.statusCode != 200) {
+            throw Exception('Erreur lors de la suppression du compte: ${response.statusCode}');
           }
         }
 
-        // Supprimer toutes les données des SharedPreferences
         await prefs.clear();
-        
-        print('🔍 Suppression de compte effectuée - SharedPreferences supprimées');
-        
-        // Naviguer vers la page de login sans possibilité de retour
+                
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => LogInScreen()),
-          (route) => false, // Supprime toutes les routes de la pile
+          (route) => false,
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Erreur lors de la suppression du compte : $e")),
       );
-      // En cas d'erreur, supprimer quand même les SharedPreferences et rediriger
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.clear();
@@ -198,13 +186,11 @@ class _ProfilPageState extends State<ProfilPage> {
           children: [
             Column(
               children: [
-                // Bandeau bleu
                 Container(
                   color: Color(0xFF0084F7),
                   height: 110,
                   width: double.infinity,
                 ),
-                // Section sous bandeau
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 10),
                   padding: const EdgeInsets.all(10),
@@ -233,7 +219,7 @@ class _ProfilPageState extends State<ProfilPage> {
                       ),
                       Text(
                         userInfo != null 
-                            ? _formatDate(userInfo!['created_at'])
+                            ? formatDate(userInfo!['created_at'])
                             : '',
                         style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
                       ),
@@ -273,7 +259,6 @@ class _ProfilPageState extends State<ProfilPage> {
                     ],
                   ),
                 ),
-                // Section Mes informations
                 const SizedBox(height: 10),
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -301,8 +286,7 @@ class _ProfilPageState extends State<ProfilPage> {
                                 context,
                                 MaterialPageRoute(builder: (context) => EditProfilePage()),
                               );
-                              // Recharger les données après retour de la page de modification
-                              _loadUserInfo();
+                              loadUserInfo();
                             },
                             child: Text('Modifier', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 15)),
                           ),
@@ -334,102 +318,6 @@ class _ProfilPageState extends State<ProfilPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                // Section Préférences
-                // Container(
-                //   margin: const EdgeInsets.symmetric(horizontal: 10),
-                //   padding: const EdgeInsets.all(10),
-                //   decoration: BoxDecoration(
-                //     color: Colors.white,
-                //     borderRadius: BorderRadius.circular(12),
-                //     boxShadow: [
-                //       BoxShadow(
-                //         color: Colors.black.withValues(alpha: 0.1),
-                //         blurRadius: 1,
-                //       ),
-                //     ],
-                //   ),
-                //   child: Column(
-                //     crossAxisAlignment: CrossAxisAlignment.start,
-                //     children: [
-                //       Row(
-                //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //         children: [
-                //           const Text('Préférences', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                //           Padding(
-                //             padding: const EdgeInsets.only(right: 2),
-                //             child: Image.asset(
-                //               'assets/images/preference.png',
-                //               width: 24,
-                //               height: 24,
-                //             ),
-                //           ),
-                //         ],
-                //       ),
-                //       const SizedBox(height: 14),
-                //       Row(
-                //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //         children: [
-                //           const Text('Nouvelles offres par email', style: TextStyle(fontSize: 13)),
-                //           Switch(value: false, onChanged: null, activeColor: Color(0xFF0084F7)),
-                //         ],
-                //       ),
-                //       SizedBox(height: 10),
-                //       Container(
-                //         width: double.infinity,
-                //         height: 1,
-                //         color: Color(0xFFF5F5F5),
-                //         margin: EdgeInsets.symmetric(horizontal: 0),
-                //       ),
-                //       SizedBox(height: 10),
-                //       Row(
-                //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //         children: [
-                //           const Text('Notifications push nouvelles offres', style: TextStyle(fontSize: 13)),
-                //           Switch(value: true, onChanged: null, activeColor: Color(0xFF0084F7)),
-                //         ],
-                //       ),
-                //       SizedBox(height: 10),
-                //       Container(
-                //         width: double.infinity,
-                //         height: 1,
-                //         color: Color(0xFFF5F5F5),
-                //         margin: EdgeInsets.symmetric(horizontal: 0),
-                //       ),
-                //       SizedBox(height: 10),
-                //       Row(
-                //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //         children: [
-                //           const Text('Thème de l’application', style: TextStyle(fontSize: 13)),
-                //           Container(
-                //             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                //             decoration: BoxDecoration(
-                //               color: Colors.grey[200],
-                //               borderRadius: BorderRadius.circular(8),
-                //               border: Border.all(color: Colors.grey.shade400),
-                //             ),
-                //             child: const Text('Clair', style: TextStyle(fontSize: 13)),
-                //           ),
-                //         ],
-                //       ),
-                //       SizedBox(height: 10),
-                //       Container(
-                //         width: double.infinity,
-                //         height: 1,
-                //         color: Color(0xFFF5F5F5),
-                //         margin: EdgeInsets.symmetric(horizontal: 0),
-                //       ),
-                //       SizedBox(height: 10),
-                //       Row(
-                //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //         children: [
-                //           const Text('Profil visible aux recruteurs', style: TextStyle(fontSize: 13)),
-                //           Switch(value: true, onChanged: null, activeColor: Color(0xFF0084)),
-                //         ],
-                //       ),
-                //     ],
-                //   ),
-                // ),
-                // const SizedBox(height: 10),
                 // Section Centre d'aide
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -598,7 +486,6 @@ class _ProfilPageState extends State<ProfilPage> {
                 ),
               ),
             ),
-            // Badge vérifié
             if (userInfo != null && userInfo!['is_verified'] == true)
               Positioned(
                 top: 16,
