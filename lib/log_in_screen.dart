@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:front_flutter/lost_id_screen.dart';
+import 'package:front_flutter/reset_password_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:front_flutter/sign_in_screen.dart';
 import 'home_tab.dart';
 import 'template.dart';
+import 'package:app_links/app_links.dart';
 
 class LogInScreen extends StatefulWidget {
+  final String? token;
+  const LogInScreen({this.token, Key? key}) : super(key: key);
+
   @override
   _LogInScreenState createState() => _LogInScreenState();
 }
@@ -18,6 +24,62 @@ class _LogInScreenState extends State<LogInScreen> {
   
   bool _isLoading = false;
   String? loginError;
+
+  late final AppLinks _appLinks;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.token != null) {
+      print("Email vérifié avec token : ${widget.token}");
+      // TODO : afficher un message de succès ou appeler une API
+    }
+    _initDeepLinks();
+  }
+
+  void _initDeepLinks() async {
+    _appLinks = AppLinks();
+
+    final uri = await _appLinks.getInitialLink();
+    if (uri != null) {
+      _handleDeepLink(uri);
+    }
+
+    _appLinks.uriLinkStream.listen((uri) {
+      if (uri != null) {
+        _handleDeepLink(uri);
+      }
+    });
+  }
+
+   void _handleDeepLink(Uri uri) {
+    print("Lien reçu : $uri");
+
+    if (uri.path == '/api/auth/reset-password') {
+      final token = uri.queryParameters['token'];
+      if (token != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ResetPasswordScreen(token: token),
+          ),
+        );
+      }
+    }
+
+    if (uri.path == '/api/auth/verify-email') {
+      final token = uri.queryParameters['token'];
+      if (token != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => LogInScreen(token: token),
+          ),
+        );
+      }
+    }
+  }
+
 
   Future<void> loginUser(String email, String password) async {
     setState(() { 
@@ -142,7 +204,10 @@ class _LogInScreenState extends State<LogInScreen> {
                 alignment: Alignment.centerRight,
                 child: GestureDetector(
                   onTap: () {
-                    print("Mot de passe oublié");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LostIdScreen()),
+                    );
                   },
                   child: Text(
                     "Identifiants oubliés ?",
