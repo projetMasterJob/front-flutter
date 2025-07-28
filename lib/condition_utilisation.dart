@@ -37,12 +37,12 @@ class ConditionUtilisationPage extends StatelessWidget {
             
             _buildSection(
               '1. Acceptation des conditions',
-              'En utilisant l\'application JobExplorer, vous acceptez d\'être lié par ces conditions d\'utilisation. Si vous n\'acceptez pas ces conditions, veuillez ne pas utiliser l\'application.',
+              'En utilisant l\'application JobAzur, vous acceptez d\'être lié par ces conditions d\'utilisation. Si vous n\'acceptez pas ces conditions, veuillez ne pas utiliser l\'application.',
             ),
             
             _buildSection(
               '2. Description du service',
-              'JobExplorer est une plateforme de recherche d\'emploi qui met en relation les candidats avec les entreprises. L\'application permet de consulter des offres d\'emploi, postuler à des candidatures et communiquer avec les recruteurs.',
+              'JobAzur est une plateforme de recherche d\'emploi qui met en relation les candidats avec les entreprises. L\'application permet de consulter des offres d\'emploi, postuler à des candidatures et communiquer avec les recruteurs.',
             ),
             
             _buildSection(
@@ -57,7 +57,7 @@ class ConditionUtilisationPage extends StatelessWidget {
             
             _buildSection(
               '5. Contenu utilisateur',
-              'Vous conservez la propriété du contenu que vous publiez. En publiant du contenu, vous accordez à JobExplorer une licence non exclusive pour utiliser, reproduire et distribuer ce contenu dans le cadre du service.',
+              'Vous conservez la propriété du contenu que vous publiez. En publiant du contenu, vous accordez à JobAzur une licence non exclusive pour utiliser, reproduire et distribuer ce contenu dans le cadre du service.',
             ),
             
             _buildSection(
@@ -67,7 +67,7 @@ class ConditionUtilisationPage extends StatelessWidget {
             
             _buildSection(
               '7. Limitation de responsabilité',
-              'JobExplorer s\'efforce de fournir un service fiable, mais ne peut garantir que le service sera ininterrompu ou exempt d\'erreurs. Nous ne sommes pas responsables des décisions d\'embauche des entreprises.',
+              'JobAzur s\'efforce de fournir un service fiable, mais ne peut garantir que le service sera ininterrompu ou exempt d\'erreurs. Nous ne sommes pas responsables des décisions d\'embauche des entreprises.',
             ),
             
             _buildSection(
@@ -77,7 +77,7 @@ class ConditionUtilisationPage extends StatelessWidget {
             
             _buildSection(
               '9. Contact',
-              'Pour toute question concernant ces conditions d\'utilisation, vous pouvez nous contacter à l\'adresse suivante : support@jobexplorer.com',
+              'Pour toute question concernant ces conditions d\'utilisation, vous pouvez nous contacter à l\'adresse suivante : support@JobAzur.com',
             ),
             
             SizedBox(height: 30),
@@ -89,7 +89,7 @@ class ConditionUtilisationPage extends StatelessWidget {
                 border: Border.all(color: Colors.blue[200]!),
               ),
               child: Text(
-                'En utilisant JobExplorer, vous confirmez avoir lu, compris et accepté ces conditions d\'utilisation.',
+                'En utilisant JobAzur, vous confirmez avoir lu, compris et accepté ces conditions d\'utilisation.',
                 style: TextStyle(
                   fontSize: 14,
                   fontStyle: FontStyle.italic,

@@ -37,37 +37,37 @@ class MentionLegalePage extends StatelessWidget {
             
             _buildSection(
               'Éditeur',
-              'JobExplorer\nApplication mobile de recherche d\'emploi\n\nAdresse : 123 Rue de l\'Emploi, 06300 Nice\nEmail : contact@jobexplorer.com\nTéléphone : +33 1 23 45 67 89',
+              'JobAzur\nApplication mobile de recherche d\'emploi\n\nAdresse : 123 Rue de l\'Emploi, 06300 Nice\nEmail : contact@JobAzur.com\nTéléphone : +33 1 23 45 67 89',
             ),
             
             _buildSection(
               'Directeur de publication',
-              'Le directeur de publication est le responsable de la communication de JobExplorer, en la personne de son représentant légal.',
+              'Le directeur de publication est le responsable de la communication de JobAzur, en la personne de son représentant légal.',
             ),
             
             _buildSection(
               'Propriété intellectuelle',
-              'L\'ensemble du contenu de l\'application JobExplorer (textes, images, logos, design, code source) est protégé par le droit d\'auteur et appartient à JobExplorer ou à ses partenaires. Toute reproduction, représentation, modification, publication, adaptation totale ou partielle des éléments de l\'application, quel que soit le moyen ou le procédé utilisé, est interdite, sauf autorisation écrite préalable.',
+              'L\'ensemble du contenu de l\'application JobAzur (textes, images, logos, design, code source) est protégé par le droit d\'auteur et appartient à JobAzur ou à ses partenaires. Toute reproduction, représentation, modification, publication, adaptation totale ou partielle des éléments de l\'application, quel que soit le moyen ou le procédé utilisé, est interdite, sauf autorisation écrite préalable.',
             ),
             
             _buildSection(
               'Liens hypertextes',
-              'L\'application JobExplorer peut contenir des liens vers d\'autres sites web. JobExplorer n\'exerce aucun contrôle sur ces sites et décline toute responsabilité quant à leur contenu.',
+              'L\'application JobAzur peut contenir des liens vers d\'autres sites web. JobAzur n\'exerce aucun contrôle sur ces sites et décline toute responsabilité quant à leur contenu.',
             ),
             
             _buildSection(
               'Protection des données personnelles',
-              'Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez d\'un droit d\'accès, de rectification, de suppression et d\'opposition aux données personnelles vous concernant. Pour exercer ces droits, contactez-nous à l\'adresse : privacy@jobexplorer.com',
+              'Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez d\'un droit d\'accès, de rectification, de suppression et d\'opposition aux données personnelles vous concernant. Pour exercer ces droits, contactez-nous à l\'adresse : privacy@JobAzur.com',
             ),
             
             _buildSection(
               'Cookies',
-              'L\'application JobExplorer utilise des cookies pour améliorer l\'expérience utilisateur. Ces cookies ne collectent aucune information personnelle identifiable et sont utilisés uniquement pour des fonctionnalités techniques.',
+              'L\'application JobAzur utilise des cookies pour améliorer l\'expérience utilisateur. Ces cookies ne collectent aucune information personnelle identifiable et sont utilisés uniquement pour des fonctionnalités techniques.',
             ),
             
             _buildSection(
               'Limitation de responsabilité',
-              'JobExplorer s\'efforce d\'assurer au mieux l\'exactitude et la mise à jour des informations diffusées sur l\'application, mais ne peut garantir l\'exactitude, la complétude, l\'actualité des informations diffusées sur son application. JobExplorer ne pourra être tenu responsable de tout dommage direct ou indirect résultant de l\'utilisation de l\'application.',
+              'JobAzur s\'efforce d\'assurer au mieux l\'exactitude et la mise à jour des informations diffusées sur l\'application, mais ne peut garantir l\'exactitude, la complétude, l\'actualité des informations diffusées sur son application. JobAzur ne pourra être tenu responsable de tout dommage direct ou indirect résultant de l\'utilisation de l\'application.',
             ),
             
             _buildSection(
@@ -77,7 +77,7 @@ class MentionLegalePage extends StatelessWidget {
             
             _buildSection(
               'Contact',
-              'Pour toute question concernant ces mentions légales, vous pouvez nous contacter :\n\nEmail : legal@jobexplorer.com\nAdresse : 123 Rue de l\'Emploi, 06300 Nice\nTéléphone : +33 1 23 45 67 89',
+              'Pour toute question concernant ces mentions légales, vous pouvez nous contacter :\n\nEmail : legal@JobAzur.com\nAdresse : 123 Rue de l\'Emploi, 06300 Nice\nTéléphone : +33 1 23 45 67 89',
             ),
             
             SizedBox(height: 30),

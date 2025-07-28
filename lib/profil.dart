@@ -357,8 +357,8 @@ class _ProfilPageState extends State<ProfilPage> {
                         onTap: () async {
                           final Uri uri = Uri(
                             scheme: 'mailto',
-                            path: 'support@jobexplorer.com',
-                            queryParameters: {'subject': 'Support JobExplorer'},
+                            path: 'support@JobAzur.com',
+                            queryParameters: {'subject': 'Support JobAzur'},
                           );
                           if (await canLaunchUrl(uri)) {
                             await launchUrl(uri);
