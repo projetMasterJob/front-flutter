@@ -138,7 +138,7 @@ class _ProfilPageState extends State<ProfilPage> {
           final token = prefs.getString('token');
           
           final response = await http.delete(
-            Uri.parse('http://10.0.2.2:5000/api/users/$userId'),
+            Uri.parse('https://gestion-service.vercel.app/api/users/$userId'),
             headers: {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $token',

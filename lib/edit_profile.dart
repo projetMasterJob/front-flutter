@@ -505,7 +505,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final token = prefs.getString('token');
       
       final response = await http.put(
-        Uri.parse('http://10.0.2.2:5000/api/users/$userId'),
+        Uri.parse('https://gestion-service.vercel.app/api/users/$userId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -553,7 +553,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final token = tokenPrefs.getString('token');
       
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:5000/api/users/$userId'),
+        Uri.parse('https://gestion-service.vercel.app/api/users/$userId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
