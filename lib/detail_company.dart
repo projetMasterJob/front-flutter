@@ -306,7 +306,7 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                                   final prefs = await SharedPreferences.getInstance();
                                   final userId = prefs.getString('user_id');
                                   final companyId = widget.companyId ?? companyData?['id'];
-                                  
+
                                   if (userId == null) {
                                     setState(() { isLoadingMessage = false; });
                                     ScaffoldMessenger.of(context).showSnackBar(
@@ -317,13 +317,12 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                                   if (companyId == null) {
                                     setState(() { isLoadingMessage = false; });
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text("Erreur : companyId introuvable.")),
+                                      SnackBar(content: Text("Erreur lors de la récupération des informations de l'entreprise.")),
                                     );
                                     return;
                                   }
                                   try {
-                                    final response = await http.get(Uri.parse('https://chat-service-six-red.vercel.app/api/chat/$userId/listes-messages'));
-                                    print('https://chat-service-six-red.vercel.app/api/chat/$userId/listes-messages');
+                                    final response = await http.get(Uri.parse('https://chat-service-six-red.vercel.app/api/chat/list/$userId'));
                                     if (response.statusCode == 200) {
                                       final List chats = json.decode(response.body);
                                       final chat = chats.firstWhere(

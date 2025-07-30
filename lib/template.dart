@@ -17,31 +17,25 @@ class TemplatePage extends StatefulWidget {
 class _TemplatePageState extends State<TemplatePage> {
   late int _selectedIndex;
   late List<Widget> _viewStack;
+  
+  // Pages créées une seule fois
+  late final List<Widget> _pages = [
+    HomeTabPage(onNavigateToDetail: _pushDetail),
+    ListChat(),
+    ProfilPage(),
+  ];
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.selectedIndex;
-    _viewStack = [_getBody(_selectedIndex)];
-  }
-
-  Widget _getBody(int index) {
-    switch (index) {
-      case 0:
-        return HomeTabPage(onNavigateToDetail: _pushDetail);
-      case 1:
-        return ListChat();
-      case 2:
-        return ProfilPage();
-      default:
-        return Container();
-    }
+    _viewStack = [];
   }
 
   void _onTabSelected(int index) {
     setState(() {
       _selectedIndex = index;
-      _viewStack = [_getBody(index)];
+      _viewStack = [];
     });
   }
 
@@ -86,7 +80,9 @@ class _TemplatePageState extends State<TemplatePage> {
               child: Container(
                 margin: const EdgeInsets.only(bottom: 0),
                 padding: const EdgeInsets.only(bottom: 70),
-                child: _viewStack.last,
+                child: _viewStack.isEmpty 
+                    ? IndexedStack(index: _selectedIndex, children: _pages)
+                    : _viewStack.last,
               ),
             ),
             Positioned(

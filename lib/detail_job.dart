@@ -3,6 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DetailJobPage extends StatefulWidget {
   final String? jobId;
@@ -18,6 +19,7 @@ class _DetailJobPageState extends State<DetailJobPage> {
   Map<String, dynamic>? jobData;
   bool isLoading = true;
   String? error;
+  final TextEditingController _motivationController = TextEditingController();
 
   @override
   void didChangeDependencies() {
@@ -57,6 +59,12 @@ class _DetailJobPageState extends State<DetailJobPage> {
         isLoading = false;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _motivationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -430,6 +438,7 @@ class _DetailJobPageState extends State<DetailJobPage> {
                               ),
                               SizedBox(height: 16),
                               TextField(
+                                controller: _motivationController,
                                 minLines: 3,
                                 maxLines: 5,
                                 decoration: InputDecoration(
@@ -449,7 +458,70 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                 width: double.infinity,
                                 height: 48,
                                 child: ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () async {
+                                    final prefs = await SharedPreferences.getInstance();
+                                    final userId = prefs.getString('user_id');
+                                    
+                                    final companyId = jobData?['company_id'];
+                                    final companyObject = jobData?['company'];
+                                    final companyIdFromObject = companyObject?['id'];
+                                    final chatId = companyIdFromObject ?? companyId;
+                                    
+                                    if (userId != null && chatId != null) {
+                                      try {
+                                        final createChatUrl = Uri.parse('https://chat-service-six-red.vercel.app/api/chat/list');
+                                        final createChatBody = {
+                                          'user_id': userId,
+                                          'company_id': chatId,
+                                        };
+                                                                                
+                                        final createChatResponse = await http.post(
+                                          createChatUrl,
+                                          headers: {'Content-Type': 'application/json'},
+                                          body: jsonEncode(createChatBody),
+                                        );
+                                        
+                                        if (createChatResponse.statusCode == 200) {
+                                          final chatData = jsonDecode(createChatResponse.body);
+                                          final createdChatId = chatData['id'];
+                                          final sendMessageUrl = Uri.parse('https://chat-service-six-red.vercel.app/api/chat/');
+                                          final messageContent = _motivationController.text.isEmpty 
+                                            ? 'Je suis intéressé(e) par votre offre d\'emploi.'
+                                            : _motivationController.text;
+                                          
+                                          final sendMessageBody = {
+                                            'chat_id': createdChatId,
+                                            'sender_id': userId,
+                                            'content': messageContent,
+                                          };
+                                                                                    
+                                          final sendMessageResponse = await http.post(
+                                            sendMessageUrl,
+                                            headers: {'Content-Type': 'application/json'},
+                                            body: jsonEncode(sendMessageBody),
+                                          );
+                                          
+                                          if (sendMessageResponse.statusCode == 200) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Candidature envoyée avec succès!')),
+                                            );
+                                          } else {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Erreur lors de l\'envoi du message.')),
+                                            );
+                                          }
+                                        } else {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Erreur lors de la création de la conversation.')),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Échec de l\'envoi du message.')),
+                                        );
+                                      }
+                                    }
+                                  },
                                   child: Text("Postuler", style: TextStyle(fontSize: 16)),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.blue[700],
