@@ -299,7 +299,7 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                       Icon(Icons.calendar_month, size: 14, color: Colors.grey[700]),
                                       SizedBox(width: 4),
                                       Text(
-                                        _formatDate(postedAt),
+                                        formatDate(postedAt),
                                         style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                                       ),
                                     ],
@@ -517,7 +517,7 @@ class _DetailJobPageState extends State<DetailJobPage> {
     );
   }
 
-  String _formatDate(String isoDate) {
+  String formatDate(String isoDate) {
     try {
       final date = DateTime.parse(isoDate);
       return "Publié le ${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} à "+

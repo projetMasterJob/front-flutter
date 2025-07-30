@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// classe pour afficher un loader de type skeleton lors de la récupération des données et images
 class SkeletonLoader extends StatefulWidget {
   final double width;
   final double height;

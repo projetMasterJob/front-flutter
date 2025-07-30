@@ -21,6 +21,8 @@ dependencies:
   json_annotation: ^4.8.1
   logger: ^2.5.0
   app_links: ^6.4.0
+  shared_preferences: ^2.2.2
+  jwt_decoder: ^2.0.1
 
 dev_dependencies:
   flutter_test:
