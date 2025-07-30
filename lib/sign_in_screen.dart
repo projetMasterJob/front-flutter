@@ -42,7 +42,6 @@ class _SignInScreenState extends State<SignInScreen> {
 
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        print('Inscription réussie ! Données : $data');
         showDialog(
           context: context,
           builder: (context) => AlertDialog(

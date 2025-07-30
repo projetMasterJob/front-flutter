@@ -267,7 +267,6 @@ class _LogInScreenState extends State<LogInScreen> {
             Spacer(),
 
             // Mentions légales
-            // Bouton "Mentions légales" en bas
             Align(
               alignment: Alignment.bottomCenter,
               child: Container(

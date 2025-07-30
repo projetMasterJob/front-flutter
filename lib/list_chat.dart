@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'chat_detail.dart';
 
 class ListChat extends StatefulWidget {
@@ -12,7 +13,7 @@ class ListChat extends StatefulWidget {
 }
 
 class _ListChatState extends State<ListChat> {
-  final String userId = '9d6ebe6f-8547-42ea-99f6-c65367c4c1c6';
+  String? userId;
   List<dynamic> chats = [];
   bool isLoading = true;
   String? error;
@@ -20,10 +21,25 @@ class _ListChatState extends State<ListChat> {
   @override
   void initState() {
     super.initState();
-    fetchChats();
+    _loadUserIdAndFetchChats();
+  }
+
+  Future<void> _loadUserIdAndFetchChats() async {
+    final prefs = await SharedPreferences.getInstance();
+    userId = prefs.getString('user_id');
+    if (userId != null) {
+      fetchChats();
+    } else {
+      setState(() {
+        error = 'ID utilisateur non trouvé';
+        isLoading = false;
+      });
+    }
   }
 
   Future<void> fetchChats() async {
+    if (userId == null) return;
+    
     final url = Uri.parse(
         'https://chat-service-six-red.vercel.app/api/chat/list/$userId');
 
@@ -87,16 +103,17 @@ class _ListChatState extends State<ListChat> {
                             trailing: const Icon(Icons.chat_bubble_outline),
                             onTap: () {
                               final chatId = chat['id'];
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ChatDetail(
-                                    chatId: chatId,
-                                    userId:
-                                        userId, // tu peux passer le userId défini dans _ListChatState
+                              if (userId != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ChatDetail(
+                                      chatId: chatId,
+                                      userId: userId!,
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
+                              }
                             },
                           ),
                         );

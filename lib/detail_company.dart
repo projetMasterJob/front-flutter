@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'skeleton_loader.dart';
 import 'chat_detail.dart';
 
@@ -282,41 +283,47 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        _buildCircleIconButton(Icons.phone, Colors.green, onPressed: () {}),
-                        SizedBox(width: 16),
-                        _buildCircleIconButton(
-                          Icons.picture_as_pdf,
-                          Colors.red,
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Bientôt disponible")),
-                            );
-                          },
-                        ),
-                        SizedBox(width: 16),
+                        // _buildCircleIconButton(Icons.phone, Colors.green, onPressed: () {}),
+                        // SizedBox(width: 16),
+                        // _buildCircleIconButton(
+                        //   Icons.picture_as_pdf,
+                        //   Colors.red,
+                        //   onPressed: () {
+                        //     ScaffoldMessenger.of(context).showSnackBar(
+                        //       SnackBar(content: Text("Bientôt disponible")),
+                        //     );
+                        //   },
+                        // ),
                         isLoadingMessage
                             ? SizedBox(
                                 width: 44,
                                 height: 44,
                                 child: Center(child: CircularProgressIndicator(strokeWidth: 3)),
                               )
-                            : _buildCircleIconButton(
-                                Icons.message,
-                                Colors.blue,
+                            : ElevatedButton.icon(
                                 onPressed: () async {
                                   setState(() { isLoadingMessage = true; });
-                                  const userId = '9d6ebe6f-8547-42ea-99f6-c65367c4c1c6';
+                                  final prefs = await SharedPreferences.getInstance();
+                                  final userId = prefs.getString('user_id');
                                   final companyId = widget.companyId ?? companyData?['id'];
+                                  
+                                  if (userId == null) {
+                                    setState(() { isLoadingMessage = false; });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text("Erreur utilisateur non trouvé.")),
+                                    );
+                                    return;
+                                  }
                                   if (companyId == null) {
                                     setState(() { isLoadingMessage = false; });
-                                    print("Erreur : companyId introuvable.");
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(content: Text("Erreur : companyId introuvable.")),
                                     );
                                     return;
                                   }
                                   try {
-                                    final response = await http.get(Uri.parse('http://10.0.2.2:3001/api/chat/$userId/listes-messages'));
+                                    final response = await http.get(Uri.parse('https://chat-service-six-red.vercel.app/api/chat/$userId/listes-messages'));
+                                    print('https://chat-service-six-red.vercel.app/api/chat/$userId/listes-messages');
                                     if (response.statusCode == 200) {
                                       final List chats = json.decode(response.body);
                                       final chat = chats.firstWhere(
@@ -348,12 +355,19 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                                     }
                                   } catch (e) {
                                     setState(() { isLoadingMessage = false; });
-                                    print("Erreur réseau : $e");
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text("Erreur réseau : $e")),
+                                      SnackBar(content: Text("Vérifiez votre connexion internet et réessayez.")),
                                     );
                                   }
                                 },
+                                icon: Icon(Icons.message, size: 20),
+                                label: Text('Message'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                ),
                               ),
                       ],
                     ),
@@ -584,24 +598,6 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
           ),
           SizedBox(height: 20),
         ],
-      ),
-    );
-  }
-
-  Widget _buildCircleIconButton(IconData icon, Color color, {required VoidCallback onPressed}) {
-    return SizedBox(
-      width: 44,
-      height: 44,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          shape: CircleBorder(),
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          padding: EdgeInsets.zero,
-          elevation: 2,
-        ),
-        child: Icon(icon, size: 22),
       ),
     );
   }

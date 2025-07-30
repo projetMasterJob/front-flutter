@@ -234,22 +234,15 @@ class _ProfilPageState extends State<ProfilPage> {
                       Row(
                         children: [
                           ElevatedButton.icon(
-                            onPressed: () {},
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Bientôt disponible")),
+                              );
+                            },
                             icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
                             label: const Text('Mon CV', style: TextStyle(color: Colors.white)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red[600],
-                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          ElevatedButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.assignment, color: Colors.white),
-                            label: const Text('Mes Candidatures', style: TextStyle(color: Colors.white)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue[700],
                               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                             ),
