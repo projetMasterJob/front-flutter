@@ -24,8 +24,8 @@ class _ListChatState extends State<ListChat> {
   }
 
   Future<void> fetchChats() async {
-    final url =
-        Uri.parse('http://10.0.2.2:3001/api/chat/$userId/listes-messages');
+    final url = Uri.parse(
+        'https://chat-service-six-red.vercel.app/api/chat/list/$userId');
 
     try {
       final response = await http.get(url);

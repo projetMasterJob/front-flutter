@@ -31,7 +31,7 @@ class _ChatDetailState extends State<ChatDetail> {
 
   Future<void> fetchMessages() async {
     final url = Uri.parse(
-        'http://10.0.2.2:3001/api/chat/get-messages/${widget.chatId}');
+        'https://chat-service-six-red.vercel.app/api/chat/${widget.chatId}');
 
     try {
       final response = await http.get(url);
@@ -66,7 +66,7 @@ class _ChatDetailState extends State<ChatDetail> {
     final content = _controller.text.trim();
     if (content.isEmpty) return;
 
-    final url = Uri.parse('http://10.0.2.2:3001/api/chat/send-message');
+    final url = Uri.parse('https://chat-service-six-red.vercel.app/api/chat/');
 
     final body = {
       'chat_id': widget.chatId,
