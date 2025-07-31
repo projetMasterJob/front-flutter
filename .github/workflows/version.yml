@@ -1,0 +1,68 @@
+name: Version automatique
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Installer Python (pour le script d'incrémentation)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Récupérer le dernier message de commit
+        id: commitmsg
+        run: |
+          MSG=$(git log -1 --pretty=%B | tr -d '\r')
+          TYPE=$(echo "$MSG" | awk '{print $1}')
+          DESC=$(echo "$MSG" | cut -d' ' -f2-)
+          # Sécurité : fallback sur patch si le type n'est pas reconnu
+          if [[ "$TYPE" != "patch" && "$TYPE" != "minor" && "$TYPE" != "major" ]]; then
+            TYPE="patch"
+            DESC="$MSG"
+          fi
+          echo "type=$TYPE" >> $GITHUB_OUTPUT
+          echo "description=$DESC" >> $GITHUB_OUTPUT
+
+      - name: Incrémenter la version dans pubspec.yaml
+        id: bump
+        run: python3 bump_version.py
+        env:
+          TYPE_BUMP: ${{ steps.commitmsg.outputs.type }}
+
+      - name: Récupérer la nouvelle version
+        id: get_version
+        run: |
+          VERSION=$(cat new_version.txt)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Mettre à jour le journal de version
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          DESC="${{ steps.commitmsg.outputs.description }}"
+          FICHIER="journal_version.txt"
+          if [ ! -f "$FICHIER" ]; then touch "$FICHIER"; fi
+          TMPFILE=$(mktemp)
+          echo "Version $VERSION" > $TMPFILE
+          echo "Description : $DESC" >> $TMPFILE
+          echo "" >> $TMPFILE
+          cat "$FICHIER" >> $TMPFILE
+          mv $TMPFILE "$FICHIER"
+
+      - name: Commit et push la nouvelle version et le journal
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add pubspec.yaml journal_version.txt
+          git commit -m "chore: bump version et journal [ci skip]"
+          git push 
