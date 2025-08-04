@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
 import 'services/location_service.dart';
 import 'models/point.dart';
 import 'package:flutter_compass/flutter_compass.dart';
@@ -95,7 +94,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
     setState(() {
       _isLoading = true;
     });
-    // Vérifie et demande la permission via LocationService
     bool permissionGranted = await LocationService.checkAndRequestPermission();
     if (!permissionGranted) {
       setState(() {
@@ -105,9 +103,9 @@ class _HomeMapPageState extends State<HomeMapPage> {
       });
       return;
     }
-    // Tente de récupérer la position
     try {
-      final position = await LocationService.getCurrentLocation();
+      final position = await LocationService.getCurrentLocation()
+          .timeout(const Duration(seconds: 10));
       setState(() {
         _currentLocation = position;
         _originalLocation = position;
@@ -116,7 +114,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
         _isLoading = false;
       });
     } catch (e) {
-      // Si la localisation de l'appareil est désactivée
       setState(() {
         _serviceEnabled = false;
         _locationPermissionGranted = true;
@@ -381,11 +378,11 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.9),
+                                      color: Colors.white.withOpacity(0.9),
                                       borderRadius: BorderRadius.circular(20),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.08),
+                                          color: Colors.black.withOpacity(0.08),
                                           blurRadius: 4,
                                         ),
                                       ],
@@ -419,7 +416,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.grey[800]!.withValues(alpha: 0.20),
+                                  color: Colors.grey[800]!.withOpacity(0.20),
                                   blurRadius: 6,
                                   offset: const Offset(0, -2),
                                 ),
@@ -489,7 +486,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                           borderRadius: BorderRadius.circular(10),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.08),
+                                              color: Colors.black.withOpacity(0.08),
                                               blurRadius: 4,
                                             ),
                                           ],
@@ -522,7 +519,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                                           borderRadius: BorderRadius.circular(10),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.08),
+                                              color: Colors.black.withOpacity(0.08),
                                               blurRadius: 4,
                                             ),
                                           ],
@@ -843,7 +840,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Colors.white.withOpacity(0.8),
                         borderRadius: BorderRadius.circular(4),
                         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
                       ),

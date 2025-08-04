@@ -22,6 +22,7 @@ class _HomeListPageState extends State<HomeListPage> {
   List<dynamic> jobs = [];
   bool isLoading = true;
   LatLng? userPosition;
+  String? locationError;
 
   @override
   void initState() {
@@ -43,9 +44,22 @@ class _HomeListPageState extends State<HomeListPage> {
 
   Future<void> _getUserPosition() async {
     try {
-      userPosition = await LocationService.getCurrentLocation();
+      locationError = null;
+      bool hasPermission = await LocationService.checkAndRequestPermission();
+      if (hasPermission) {
+        userPosition = await LocationService.getCurrentLocation()
+            .timeout(const Duration(seconds: 10));
+      } else {
+        userPosition = null;
+        locationError = "Permissions de géolocalisation non accordées. Le tri par distance ne sera pas disponible.";
+      }
     } catch (e) {
       userPosition = null;
+      if (e.toString().contains('TimeoutException')) {
+        locationError = "Délai d'attente dépassé pour la géolocalisation. Le tri par distance ne sera pas disponible.";
+      } else {
+        locationError = "Impossible d'obtenir votre position. Le tri par distance ne sera pas disponible.";
+      }
     }
   }
 
@@ -63,7 +77,6 @@ class _HomeListPageState extends State<HomeListPage> {
       ...companies.where((c) => search.isEmpty || (c['name']?.toLowerCase().contains(search) ?? false)),
       ...jobs.where((j) => search.isEmpty || (j['title']?.toLowerCase().contains(search) ?? false)),
     ].cast<Map>();
-    // Ajout de la distance pour le tri
     for (var item in items) {
       item['__distance'] = _getDistance(item) ?? double.infinity;
     }
@@ -224,10 +237,41 @@ class _HomeListPageState extends State<HomeListPage> {
       color: Color(0xFFF5F5F5),
       child: isLoading
           ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              padding: EdgeInsets.only(top: 8, bottom: 8),
-              itemCount: items.length,
-              itemBuilder: (context, i) => _buildItem(items[i]),
+          : Column(
+              children: [
+                if (locationError != null)
+                  Container(
+                    margin: EdgeInsets.all(12),
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange[200]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.location_off, color: Colors.orange[700], size: 20),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            locationError!,
+                            style: TextStyle(
+                              color: Colors.orange[700],
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: EdgeInsets.only(top: 8, bottom: 8),
+                    itemCount: items.length,
+                    itemBuilder: (context, i) => _buildItem(items[i]),
+                  ),
+                ),
+              ],
             ),
     );
   }

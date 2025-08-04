@@ -52,7 +52,7 @@ class _TemplatePageState extends State<TemplatePage> {
   }
 
   void _popView() {
-    if (_viewStack.length > 1) {
+    if (_viewStack.isNotEmpty) {
       setState(() {
         _viewStack.removeLast();
       });

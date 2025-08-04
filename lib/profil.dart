@@ -202,7 +202,7 @@ class _ProfilPageState extends State<ProfilPage> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Colors.black.withOpacity(0.1),
                         blurRadius: 1,
                       ),
                     ],
@@ -261,7 +261,7 @@ class _ProfilPageState extends State<ProfilPage> {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Colors.black.withOpacity(0.1),
                         blurRadius: 1,
                       ),
                     ],
@@ -320,7 +320,7 @@ class _ProfilPageState extends State<ProfilPage> {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Colors.black.withOpacity(0.1),
                         blurRadius: 1,
                       ),
                     ],
@@ -346,36 +346,36 @@ class _ProfilPageState extends State<ProfilPage> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      InkWell(
-                        onTap: () async {
-                          final Uri uri = Uri(
-                            scheme: 'mailto',
-                            path: 'support@JobAzur.com',
-                            queryParameters: {'subject': 'Support JobAzur'},
-                          );
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Impossible d\'ouvrir le client de messagerie. Veuillez l\'ouvrir manuellement.')),
-                            );
-                          }
-                        },
-                        child: Row(
-                          children: const [
-                            Icon(Icons.mail_outline, color: Colors.blue),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Text('Contacter le support', style: TextStyle(color: Colors.blue, fontSize: 16)),
-                            ),
-                            Icon(Icons.chevron_right, color: Colors.grey),
-                          ],
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16.0),
-                        child: Divider(height: 1, color: Color(0xFFE0E0E0)),
-                      ),
+                      // InkWell(
+                      //   onTap: () async {
+                      //     final Uri uri = Uri(
+                      //       scheme: 'mailto',
+                      //       path: 'support@JobAzur.com',
+                      //       queryParameters: {'subject': 'Support JobAzur'},
+                      //     );
+                      //     if (await canLaunchUrl(uri)) {
+                      //       await launchUrl(uri);
+                      //     } else {
+                      //       ScaffoldMessenger.of(context).showSnackBar(
+                      //         SnackBar(content: Text('Impossible d\'ouvrir le client de messagerie. Veuillez l\'ouvrir manuellement.')),
+                      //       );
+                      //     }
+                      //   },
+                      //   child: Row(
+                      //     children: const [
+                      //       Icon(Icons.mail_outline, color: Colors.blue),
+                      //       SizedBox(width: 12),
+                      //       Expanded(
+                      //         child: Text('Contacter le support', style: TextStyle(color: Colors.blue, fontSize: 16)),
+                      //       ),
+                      //       Icon(Icons.chevron_right, color: Colors.grey),
+                      //     ],
+                      //   ),
+                      // ),
+                      // const Padding(
+                      //   padding: EdgeInsets.symmetric(vertical: 16.0),
+                      //   child: Divider(height: 1, color: Color(0xFFE0E0E0)),
+                      // ),
                       InkWell(
                         onTap: () {
                           Navigator.push(

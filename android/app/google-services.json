@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "65688046572",
+    "project_id": "jobazur",
+    "storage_bucket": "jobazur.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:65688046572:android:5210cd2d5e96ddebab8ec9",
+        "android_client_info": {
+          "package_name": "com.example.front_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdAJkPRtluJxWVxFGGDu7i5po11MoDAH0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
