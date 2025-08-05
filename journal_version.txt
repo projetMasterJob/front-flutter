@@ -1,3 +1,6 @@
+Version 1.0.2
+Description : affichage des informations du destinataire dans la liste des discussions et optimisations diverses
+
 Version 1.0.1
 Description : Découvrez JobAzur, une application destinée à rapprocher l'offre et la demande d'emplois
 
