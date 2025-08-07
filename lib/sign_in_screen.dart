@@ -84,7 +84,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 children: [
                   Image.asset(
                     'assets/images/logo.png',
-                    height: 250,
+                    height: 200,
                   ),
                 ],
               ),
@@ -275,23 +275,6 @@ class _SignInScreenState extends State<SignInScreen> {
                 child: Text(
                   "Inscription",
                   style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                width: double.infinity,
-                color: Colors.grey[200],
-                padding: EdgeInsets.symmetric(vertical: 15),
-                child: TextButton(
-                  onPressed: () {
-                    print("Mentions légales");
-                  },
-                  child: Text(
-                    "Mentions légales",
-                    style: TextStyle(fontSize: 16, color: Colors.blue),
-                  ),
                 ),
               ),
             ),

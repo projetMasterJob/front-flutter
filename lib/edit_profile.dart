@@ -16,7 +16,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool isLoading = true;
   bool isSaving = false;
 
-  // Controllers pour les champs de texte
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
@@ -27,7 +26,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController newPasswordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
 
-  // Variables pour afficher/masquer les mots de passe
   bool showOldPassword = false;
   bool showNewPassword = false;
   bool showConfirmPassword = false;
@@ -41,7 +39,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     loadUserInfo();
   }
 
-  // Méthode pour obtenir l'instance de SharedPreferences
   Future<SharedPreferences> get _prefsInstance async {
     _prefs ??= await SharedPreferences.getInstance();
     return _prefs!;
@@ -79,7 +76,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
       phoneController.text = userInfo!['phone'] ?? '';
       emailController.text = userInfo!['email'] ?? '';
 
-      // Stocker les valeurs originales pour comparaison
       originalValues = {
         'first_name': userInfo!['first_name'] ?? '',
         'last_name': userInfo!['last_name'] ?? '',
@@ -386,7 +382,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     });
 
     try {
-      // Récupérer l'ID utilisateur
       final prefs = await _prefsInstance;
       final userId = prefs.getString('user_id');
 
@@ -394,10 +389,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         throw Exception('ID utilisateur non trouvé');
       }
 
-      // Préparer les données à envoyer (seulement les champs modifiés)
       final updateData = <String, dynamic>{};
 
-      // Vérifier quels champs ont été modifiés
       if (firstNameController.text != originalValues['first_name']) {
         updateData['first_name'] = firstNameController.text;
       }
@@ -417,13 +410,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
         updateData['email'] = emailController.text.trim();
       }
 
-      // Vérification des mots de passe
       final hasPasswordFields = oldPasswordController.text.isNotEmpty || 
                                newPasswordController.text.isNotEmpty || 
                                confirmPasswordController.text.isNotEmpty;
       
       if (hasPasswordFields) {
-        // Si au moins un champ de mot de passe est rempli, tous doivent être remplis
         if (oldPasswordController.text.isEmpty || 
             newPasswordController.text.isEmpty || 
             confirmPasswordController.text.isEmpty) {
@@ -435,7 +426,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
           return;
         }
 
-        // Vérifier que l'ancien mot de passe n'est pas vide
         if (oldPasswordController.text.isEmpty) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -445,7 +435,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
           return;
         }
 
-        // Vérifier que le nouveau mot de passe et la confirmation correspondent
         if (newPasswordController.text != confirmPasswordController.text) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -455,7 +444,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
           return;
         }
 
-        // Vérifier l'ancien mot de passe avec l'API de login
         final email = prefs.getString('userinfo');
         if (email == null) {
           if (mounted) {
@@ -487,12 +475,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
           return;
         }
 
-        // Ajouter les mots de passe à l'update
         updateData['oldPassword'] = oldPasswordController.text;
         updateData['newPassword'] = newPasswordController.text;
       }
 
-      // Vérifier s'il y a des modifications
       if (updateData.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -514,7 +500,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
       );
 
       if (response.statusCode == 200) {
-        // Récupérer les nouvelles informations utilisateur depuis l'API
         await refreshUserInfo(userId);
 
         if (mounted) {
@@ -546,7 +531,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
-  // Méthode pour rafraîchir les informations utilisateur depuis l'API
   Future<void> refreshUserInfo(String userId) async {
     try {
       final tokenPrefs = await _prefsInstance;
@@ -579,7 +563,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
-  // Méthode pour libérer les ressources
   @override
   void dispose() {
     firstNameController.dispose();

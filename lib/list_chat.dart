@@ -16,7 +16,7 @@ class ListChat extends StatefulWidget {
 class _ListChatState extends State<ListChat> {
   String? userId;
   List<dynamic> chats = [];
-  Map<String, String> companyNames = {}; // Cache simple
+  Map<String, String> companyNames = {};
   bool isLoading = true;
   String? error;
 
