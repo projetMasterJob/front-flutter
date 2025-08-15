@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:front_flutter/sign_in_screen.dart';
+import 'package:front_flutter/dashboard_pro.dart';
 import 'home_tab.dart';
 import 'template.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -41,15 +42,27 @@ class _LogInScreenState extends State<LogInScreen> {
 
         if (accessToken != null) {
           try {
-            final decodedToken = JwtDecoder.decode(accessToken);            
+            final decodedToken = JwtDecoder.decode(accessToken);
+            print(decodedToken);
             await _saveUserData(accessToken, decodedToken);
-            await getUserLoginInfos(decodedToken['id'].toString());            
+            await getUserLoginInfos(decodedToken['id'].toString());
 
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => TemplatePage(selectedIndex: 0)),
-            );
+            final role = decodedToken['role']?.toString().toLowerCase();
 
+            if(role == "pro")
+            {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => CompanyDashboardPage()),
+              );
+            }
+            else
+            {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => TemplatePage(selectedIndex: 0)),
+              );
+            }
           } catch (e) {
             setState(() {
               loginError = "Une erreur est survenue lors de la connexion, veuillez réessayer.";
