@@ -3,7 +3,7 @@ class Job {
   final String description;
   final String salary;
   final String jobType;
-  final String postedAt;     // "il y a 2 j" ou un ISO date si le backend renvoie ça
+  final String postedAt;
   final int candidats;
 
   Job({

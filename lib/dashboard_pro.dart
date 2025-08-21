@@ -6,6 +6,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:timeago/timeago.dart' as timeago;
+import 'job_list_page.dart';
 
 class CompanyDashboardPage extends StatefulWidget {
   const CompanyDashboardPage({super.key});
@@ -130,15 +131,11 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
                             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            "Membre depuis le ${c.memberSince}",
+                            "Membre depuis le ${c.createdAt}",
                             style: const TextStyle(
                                 fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
                           ),
                           const SizedBox(height: 20),
-                          Text(
-                            c.tagline,
-                            style: const TextStyle(fontSize: 13),
-                          ),
                         ],
                       ),
                     ),
@@ -261,7 +258,6 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
           _infoLine("Adresse", address),
           _infoLine("Téléphone", phone),
           _infoLine("Email", email),
-          _infoLine("Mot de passe", "●●●●●●●●"),
         ],
       ),
     );
@@ -304,7 +300,9 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader("Emplois publiés", "Voir tout", () {}),
+          _sectionHeader("Emplois publiés", "Voir tout", () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const JobsListPage()));
+          }),
           const SizedBox(height: 12),
           if (jobs.isEmpty)
             const Text("Aucun emploi publié")
