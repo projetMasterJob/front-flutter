@@ -106,6 +106,7 @@ class _JobsListPageState extends State<JobsListPage> {
     }
     if (_error != null) {
       return Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(title: const Text('Emplois publiés')),
         body: Center(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -122,6 +123,7 @@ class _JobsListPageState extends State<JobsListPage> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(title: const Text('Emplois publiés')),
       body: RefreshIndicator(
         onRefresh: _loadFirst,

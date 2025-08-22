@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:timeago/timeago.dart' as timeago;
 import 'job_list_page.dart';
 import 'application_list_page.dart';
+import 'new_job_page.dart';
 
 class CompanyDashboardPage extends StatefulWidget {
   const CompanyDashboardPage({super.key});
@@ -26,12 +27,18 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
     _future = _service.fetchDashboardForCurrentUser(); // une seule fois
   }
 
+  Future<void> _reload() async {
+    setState(() {
+      _future = _service.fetchDashboardForCurrentUser(); // ⬅️ nouvelle Future
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final api = CompanyService();
 
     return FutureBuilder<CompanyDashboardData>(
-      future: api.fetchDashboardForCurrentUser(),
+      future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // État de chargement
@@ -85,10 +92,17 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
         return Scaffold(
           backgroundColor: Colors.grey[100],
           floatingActionButton: FloatingActionButton.extended(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Créer une nouvelle annonce")),
+            onPressed: () async {
+              final created = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => NewJobPage(companyId: c.id)),
               );
+              if (created == true && mounted) {
+                await _reload();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Annonce créée')),
+                );
+              }
             },
             icon: const Icon(Icons.add),
             label: const Text("Nouvelle annonce"),

@@ -1,4 +1,5 @@
 class Application {
+  final String id;
   final String status;          // "pending" | "accepted" | "rejected"
   final DateTime appliedAt;
   final String firstName;
@@ -6,12 +7,14 @@ class Application {
   final String email;
   final String phone;
   final String? address;
-  final int jobId;
+  final String jobId;
   final String jobTitle;
   final String cvUrl;
   final String description;
 
+
   Application({
+    required this.id,
     required this.firstName,
     required this.lastName,
     required this.email,
@@ -26,7 +29,10 @@ class Application {
   });
 
   factory Application.fromJson(Map<String, dynamic> json) {
+    String _asStr(dynamic v) => (v ?? '').toString();
+    
     return Application(
+      id: _asStr(json['id']),
       firstName: json['first_name'] ?? '',
       lastName: json['last_name'] ?? '',
       email: json['email'] ?? '',
@@ -34,7 +40,7 @@ class Application {
       address: json['address'] ?? '',
       appliedAt: DateTime.parse(json['applied_at'] ?? ''),
       status: json['status'] ?? '',
-      jobId: int.tryParse(json['job_id'].toString()) ?? 0,
+      jobId: _asStr(json['job_id']),
       jobTitle: json['job_title'] ?? '',
       cvUrl: (json['cv_url'] ?? json['cvUrl'] ?? '').toString(),
       description: json['description'] ?? '',
@@ -53,4 +59,19 @@ class Application {
       default: return status;
     }
   }
+
+  Application copyWith({String? status}) => Application(
+    id: id,
+    jobId: jobId,
+    status: status ?? this.status,
+    appliedAt: appliedAt,
+    firstName: firstName,
+    lastName: lastName,
+    email: email,
+    phone: phone,
+    address: address,
+    cvUrl: cvUrl,
+    description: description,
+    jobTitle: jobTitle,
+  );
 }

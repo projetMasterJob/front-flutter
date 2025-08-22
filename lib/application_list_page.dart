@@ -16,6 +16,7 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
   final _controller = ScrollController();
 
   final _items = <Application>[];
+  final _processing = <String>{};
   int _page = 1;
   final int _limit = 20;
   bool _initialLoading = true;
@@ -74,6 +75,31 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
     }
   }
 
+  Future<void> _changeStatus(Application a, String newStatus) async {
+    if (_processing.contains(a.id)) return;
+    setState(() => _processing.add(a.id));
+
+    final idx = _items.indexWhere((x) => x.id == a.id);
+    final old = a.status;
+    if (idx != -1) setState(() => _items[idx] = a.copyWith(status: newStatus));
+
+    try {
+      await _service.updateApplicationStatus(applicationId: a.id, status: newStatus);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Candidature ${newStatus == 'accepted' ? 'acceptée' : 'refusée'}')),
+      );
+    } catch (e) {
+      // ❌ Rollback seulement si le PUT a échoué
+      if (idx != -1) setState(() => _items[idx] = _items[idx].copyWith(status: old));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Échec: $e')));
+    } finally {
+      if (!mounted) return;
+      setState(() => _processing.remove(a.id));
+    }
+  }
+
   void _onScroll() {
     if (_controller.position.pixels >= _controller.position.maxScrollExtent - 300) {
       _loadMore();
@@ -98,6 +124,8 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
         return Colors.grey;
     }
   }
+
+  bool _isProcessing(Application a) => _processing.contains(a.id);
 
   @override
   Widget build(BuildContext context) {
@@ -151,6 +179,7 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
             final cvUrl    = (a as dynamic)?.cvUrl as String?;      // idem
 
             return _ApplicationCard(
+              key: ValueKey<String>(a.id),
               name: name,
               email: email,
               phone: phone,
@@ -167,12 +196,13 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
                 }
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Télécharger le CV (à brancher)')));
               },
-              onAccept: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Candidature acceptée (à brancher)')));
-              },
-              onReject: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Candidature refusée (à brancher)')));
-              },
+              onAccept: _isProcessing(a) || a.status.toLowerCase() == 'accepted'
+                  ? null
+                  : () => _changeStatus(a, 'accepted'),
+
+              onReject: _isProcessing(a) || a.status.toLowerCase() == 'rejected'
+                  ? null
+                  : () => _changeStatus(a, 'rejected'),
             );
           },
         ),
@@ -195,6 +225,7 @@ class _ApplicationCard extends StatefulWidget {
     this.onTapCv,
     this.onAccept,
     this.onReject,
+    this.onMessage,
   });
 
   final String name;
@@ -208,6 +239,7 @@ class _ApplicationCard extends StatefulWidget {
   final VoidCallback? onTapCv;
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
+  final VoidCallback? onMessage;
 
   @override
   State<_ApplicationCard> createState() => _ApplicationCardState();
@@ -306,6 +338,14 @@ class _ApplicationCardState extends State<_ApplicationCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              _ActionIconPill(
+                icon: Icons.chat_bubble_outline,
+                bg: const Color(0xFF1A73E8),
+                fg: Colors.white,
+                onTap: widget.onMessage,
+                tooltip: 'Message',
+              ),
+              const SizedBox(width: 8),
               _ActionPillButton(
                 icon: Icons.file_download_outlined,
                 label: 'CV',
@@ -402,5 +442,37 @@ class _ActionPillButton extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _ActionIconPill extends StatelessWidget {
+  const _ActionIconPill({
+    required this.icon,
+    required this.bg,
+    required this.fg,
+    this.onTap,
+    this.tooltip,
+  });
+
+  final IconData icon;
+  final Color bg;
+  final Color fg;
+  final VoidCallback? onTap;
+  final String? tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final btn = InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Container(
+        width: 40, // pill compacte
+        height: 36,
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
+        alignment: Alignment.center,
+        child: Icon(icon, size: 18, color: fg),
+      ),
+    );
+    return tooltip == null ? btn : Tooltip(message: tooltip!, child: btn);
   }
 }

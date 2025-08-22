@@ -28,7 +28,7 @@ class CompanyService {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');
     if (token == null || token.isEmpty) throw ApiException('Aucun token. Connectez-vous.');
-    if (JwtDecoder.isExpired(token)) throw ApiException('Session expirée. Connectez-vous.');
+    //if (JwtDecoder.isExpired(token)) throw ApiException('Session expirée. Connectez-vous.');
     final p = JwtDecoder.decode(token);
     final userId = (p['id'] ?? p['userId'] ?? p['sub']).toString();
     return (token, userId);
@@ -89,6 +89,66 @@ class CompanyService {
       jobs: results[1] as List<Job>,
       applications: results[2] as List<Application>,
     );
+  }
+
+  Future<void> updateApplicationStatus({
+    required String applicationId,
+    required String status, // "accepted" ou "rejected"
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+    if (token == null || token.isEmpty) throw Exception('Aucun token');
+
+    assert(status == 'accepted' || status == 'rejected',
+        'status doit être "accepted" ou "rejected"');
+
+    //final (token, _) = await _auth();
+    final uri = Uri.parse('$_baseUrl/companies/application/$applicationId');
+
+    final r = await _client
+        .put(
+          uri,
+          headers: _headers(token),
+          body: json.encode({'status': status}),
+        )
+        .timeout(const Duration(seconds: 12));
+
+    if (r.statusCode >= 200 && r.statusCode < 300) {
+      return; // ✅ Succès (200/204)
+    }
+    throw ApiException('Erreur ${r.statusCode} — ${r.body}');
+  }
+
+  Future<void> createJob({
+    required String companyId,        // UUID
+    required String title,
+    required String description,
+    required String salary,           // "2200" (tu peux passer Number si ton back accepte)
+    required String jobType,          // 'full_time' | 'part_time' | 'interim'
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+    if (token == null || token.isEmpty) throw Exception('Aucun token');
+
+    final uri = Uri.parse('$_baseUrl/companies/job');
+
+    final body = {
+      'title': title,
+      'description': description,
+      'salary': salary,
+      'job_type': jobType,
+      'company_id': companyId,
+    };
+
+    final r = await _client.post(
+      uri,
+      headers: _headers(token),
+      body: json.encode(body),
+    ).timeout(const Duration(seconds: 12));
+
+    if (r.statusCode < 200 || r.statusCode >= 300) {
+      throw ApiException('Création échouée (${r.statusCode}) — ${r.body}');
+    }
   }
 
   void dispose() => _client.close();
