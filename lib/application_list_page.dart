@@ -5,8 +5,12 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'services/company_service.dart';
 import 'models/application.dart';
 
+import 'chat_detail.dart';
+
 class ApplicationListPage extends StatefulWidget {
-  const ApplicationListPage({super.key});
+  const ApplicationListPage({super.key, required this.companyId});
+  final String companyId;
+
   @override
   State<ApplicationListPage> createState() => _ApplicationListPageState();
 }
@@ -14,6 +18,7 @@ class ApplicationListPage extends StatefulWidget {
 class _ApplicationListPageState extends State<ApplicationListPage> {
   final _service = CompanyService();
   final _controller = ScrollController();
+  String? _companyUserId;
 
   final _items = <Application>[];
   final _processing = <String>{};
@@ -29,6 +34,7 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
     super.initState();
     _loadFirst();
     _controller.addListener(_onScroll);
+    _loadCompanyUserId();
   }
 
   @override
@@ -97,6 +103,16 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
     } finally {
       if (!mounted) return;
       setState(() => _processing.remove(a.id));
+    }
+  }
+
+  Future<void> _loadCompanyUserId() async {
+    try {
+      final uid = await _service.currentUserId();
+      if (mounted) setState(() => _companyUserId = uid);
+    } catch (e) {
+      // Option : afficher un message, mais on pourra aussi re-tenter au clic
+      debugPrint('companyUserId load error: $e');
     }
   }
 
@@ -203,6 +219,49 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
               onReject: _isProcessing(a) || a.status.toLowerCase() == 'rejected'
                   ? null
                   : () => _changeStatus(a, 'rejected'),
+              onMessage: () async {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => const Center(child: CircularProgressIndicator()),
+                );
+
+                try {
+                  final chatId = await _service.createOrGetConversation(
+                    candidateUserId: a.userId,          // depuis Application.userId
+                    companyId: widget.companyId,        // passé à la page
+                  );
+
+                  print('Chat ID: $chatId');
+                  print('User ID: $_companyUserId');
+
+                  if (!mounted) return;
+                  Navigator.pop(context); // ferme le loader
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatDetail(
+                        chatId: chatId,
+                        userId: _companyUserId!,
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+                  Navigator.pop(context); // ferme le loader
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Impossible d’ouvrir la conversation : $e')),
+                  );
+                }
+                //faire un appel api pour créer la conversation besoin de user_id (candidat) et company_id
+                //contrôler le retour
+                //si la conversation n'existe pas elle est créée il envoie 200 avec id de la conv
+                //ensuite avec l'id j'appelle la page donc navigator machin avec dedans l'id renvoyé juste avant et j'ai aussi besoin du user_id company
+                //si la conversation existe il renvoie 200 avec error en item + chat_id
+                //ensuite avec l'id j'appelle la page donc navigator machin avec dedans l'id renvoyé juste avant et j'ai aussi besoin du user_id company
+                //navigator push
+              },
             );
           },
         ),

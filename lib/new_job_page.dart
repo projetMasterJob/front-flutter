@@ -144,7 +144,8 @@ class _NewJobPageState extends State<NewJobPage> {
                   items: const [
                     DropdownMenuItem(value: 'full_time', child: Text('Temps plein')),
                     DropdownMenuItem(value: 'part_time', child: Text('Temps partiel')),
-                    DropdownMenuItem(value: 'interim',    child: Text('Intérim')),
+                    DropdownMenuItem(value: 'internship',    child: Text('Intérim')),
+                    DropdownMenuItem(value: 'contract',    child: Text('Contrat')),
                   ],
                   onChanged: (v) => setState(() => _jobType = v ?? 'full_time'),
                   decoration: const InputDecoration(labelText: 'Type de job'),

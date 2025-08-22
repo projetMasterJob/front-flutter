@@ -18,7 +18,7 @@ class CompanyDashboardPage extends StatefulWidget {
 
 class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
   late final CompanyService _service;
-  late final Future<CompanyDashboardData> _future;
+  late Future<CompanyDashboardData> _future;
 
   @override
   void initState() {
@@ -88,6 +88,8 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
 
         final data = snapshot.data!;
         final c = data.company;
+        final extraSpace =
+          MediaQuery.of(context).padding.bottom + 56.0 + 16.0;
 
         return Scaffold(
           backgroundColor: Colors.grey[100],
@@ -107,149 +109,160 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
             icon: const Icon(Icons.add),
             label: const Text("Nouvelle annonce"),
           ),
-          body: SingleChildScrollView(
-            child: Stack(
-              children: [
-                Column(
-                  children: [
-                    // Bandeau bleu
-                    Container(
-                      color: const Color(0xFF0084F7),
-                      height: 110,
-                      width: double.infinity,
-                    ),
-                    // Carte infos entreprise
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(0),
-                          topRight: Radius.circular(0),
-                          bottomLeft: Radius.circular(16),
-                          bottomRight: Radius.circular(16),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(bottom: extraSpace),
+              child: Stack(
+                children: [
+                  Column(
+                    children: [
+                      // Bandeau bleu
+                      Container(
+                        color: const Color(0xFF0084F7),
+                        height: 110,
+                        width: double.infinity,
+                      ),
+                      // Carte infos entreprise
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(0),
+                            topRight: Radius.circular(0),
+                            bottomLeft: Radius.circular(16),
+                            bottomRight: Radius.circular(16),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 1,
+                            ),
+                          ],
                         ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 50),
+                            Text(
+                              c.name,
+                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              "Membre depuis le ${c.createdAt}",
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Section Informations
+                      _buildInfoSection(c.address, c.phone, c.email),
+
+                      const SizedBox(height: 10),
+
+                      // Section Emplois publiés
+                      _buildJobSection(
+                        data.jobs
+                          .map((j) => {
+                            "title": j.title,
+                            "description": j.description,
+                            "salary": j.salary,
+                            "job_type": j.jobType,
+                            "posted_at": j.postedAt,
+                            "applications_count": j.applicationsCount,
+                          })
+                          .toList(),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // Section Candidatures reçues
+                      _buildApplicationsSection(
+                        data.applications
+                          .map((a) => {
+                            'name': a.fullName,
+                            'job' : '—',
+                            'date': timeago.format(a.appliedAt.toLocal(), locale: 'fr_short'),
+                            'status': a.statusLabel,
+                          })
+                          .toList(),
+                          onSeeAll: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ApplicationListPage(companyId: c.id), // ⬅️ pas de `const`
+                              ),
+                            );
+                          },
+                      ),
+
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+
+                  // Avatar circulaire (initiales)
+                  Positioned(
+                    top: 40,
+                    left: 32,
+                    child: Container(
+                      width: 110,
+                      height: 110,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE3F0FB),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 1,
+                            color: Colors.black.withOpacity(0.10),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 50),
-                          Text(
-                            c.name,
-                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            "Membre depuis le ${c.createdAt}",
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Section Informations
-                    _buildInfoSection(c.address, c.phone, c.email),
-
-                    const SizedBox(height: 10),
-
-                    // Section Emplois publiés
-                    _buildJobSection(
-                      data.jobs
-                        .map((j) => {
-                          "title": j.title,
-                          "description": j.description,
-                          "salary": j.salary,
-                          "job_type": j.jobType,
-                          "posted_at": j.postedAt,
-                          "applications_count": j.applicationsCount,
-                        })
-                        .toList(),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // Section Candidatures reçues
-                    _buildApplicationsSection(
-                      data.applications
-                          .map((a) => {
-                                'name': a.fullName,
-                                'job' : '—',
-                                'date': timeago.format(a.appliedAt.toLocal(), locale: 'fr_short'),
-                                'status': a.statusLabel,
-                              })
-                          .toList(),
-                    ),
-
-                    const SizedBox(height: 20),
-                  ],
-                ),
-
-                // Avatar circulaire (initiales)
-                Positioned(
-                  top: 40,
-                  left: 32,
-                  child: Container(
-                    width: 110,
-                    height: 110,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE3F0FB),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.10),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
+                      child: Center(
+                        child: Text(
+                          c.name.isNotEmpty
+                              ? "${c.name[0]}${c.name.split(" ").length > 1 ? c.name.split(" ").last[0] : ''}"
+                              : '',
+                          style: const TextStyle(
+                              fontSize: 40, color: Color(0xFF2196F3), fontWeight: FontWeight.bold),
                         ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        c.name.isNotEmpty
-                            ? "${c.name[0]}${c.name.split(" ").length > 1 ? c.name.split(" ").last[0] : ''}"
-                            : '',
-                        style: const TextStyle(
-                            fontSize: 40, color: Color(0xFF2196F3), fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
-                ),
 
-                // Badge vérifié
-                if (c.verified)
-                  Positioned(
-                    top: 16,
-                    right: 16,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.green[400],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.check, color: Colors.white, size: 16),
-                          SizedBox(width: 4),
-                          Text(
-                            'Vérifié',
-                            style: TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                          ),
-                        ],
+                  // Badge vérifié
+                  if (c.verified)
+                    Positioned(
+                      top: 16,
+                      right: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green[400],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check, color: Colors.white, size: 16),
+                            SizedBox(width: 4),
+                            Text(
+                              'Vérifié',
+                              style: TextStyle(
+                                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -352,7 +365,10 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
     );
   }
 
-  Widget _buildApplicationsSection(List<Map<String, dynamic>> applications) {
+  Widget _buildApplicationsSection(List<Map<String, dynamic>> applications, {
+      required VoidCallback onSeeAll, // ⬅️ nouveau
+  }) 
+  {
     Color _statusColor(String s) {
       switch (s.toLowerCase()) {
         case 'à étudier':
@@ -389,9 +405,7 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader("Candidatures reçues", "Voir tout", () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const ApplicationListPage()));
-          }),
+          _sectionHeader("Candidatures reçues", "Voir tout", onSeeAll),
           const SizedBox(height: 12),
           if (applications.isEmpty)
             const Text("Aucune candidature")

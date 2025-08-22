@@ -11,6 +11,7 @@ class Application {
   final String jobTitle;
   final String cvUrl;
   final String description;
+  final String userId;
 
 
   Application({
@@ -26,6 +27,7 @@ class Application {
     required this.jobTitle,
     this.cvUrl = '',
     this.description = '',
+    required this.userId,
   });
 
   factory Application.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,7 @@ class Application {
       jobTitle: json['job_title'] ?? '',
       cvUrl: (json['cv_url'] ?? json['cvUrl'] ?? '').toString(),
       description: json['description'] ?? '',
+      userId: _asStr(json['user_id']),
     );
   }
 
@@ -73,5 +76,6 @@ class Application {
     cvUrl: cvUrl,
     description: description,
     jobTitle: jobTitle,
+    userId: userId,
   );
 }

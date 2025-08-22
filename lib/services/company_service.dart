@@ -22,15 +22,19 @@ class CompanyService {
   final http.Client _client;
 
   String get _baseUrl => dotenv.get('BASE_URL', fallback: 'http://192.168.1.57:5000/api');
+  String get _chatUrl => dotenv.get('CHAT_URL');
 
   // --- Helpers
   Future<(String token, String userId)> _auth() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');
     if (token == null || token.isEmpty) throw ApiException('Aucun token. Connectez-vous.');
-    //if (JwtDecoder.isExpired(token)) throw ApiException('Session expirée. Connectez-vous.');
-    final p = JwtDecoder.decode(token);
-    final userId = (p['id'] ?? p['userId'] ?? p['sub']).toString();
+    var userId = prefs.getString('user_id');
+    if (userId == null || userId.isEmpty) {
+      final payload = JwtDecoder.decode(token);
+      userId = (payload['sub'] ?? payload['id'] ?? payload['userId']).toString();
+      await prefs.setString('user_id', userId);
+    }
     return (token, userId);
   }
 
@@ -150,6 +154,50 @@ class CompanyService {
       throw ApiException('Création échouée (${r.statusCode}) — ${r.body}');
     }
   }
+
+  Future<String> createOrGetConversation({
+    required String candidateUserId, // user_id du candidat (UUID)
+    required String companyId,       // company_id (UUID)
+  }) async {
+    // Choisis l’URL qui correspond à ton back:
+    // ex. POST /conversations   OU   POST /companies/:companyId/conversations
+    final uri = Uri.parse('$_chatUrl/chat/list');
+
+    final body = json.encode({
+      'user_id': candidateUserId,
+      'company_id'  : companyId,
+    });
+
+    final r = await _client.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: body,
+    ).timeout(const Duration(seconds: 12));
+
+    if (r.statusCode >= 200 && r.statusCode < 300) {
+      // Le back peut renvoyer { chat_id } ou { id }.
+      final Map<String, dynamic> data = json.decode(r.body);
+      final chatId = (data['id'])?.toString();
+      if (chatId != null && chatId.isNotEmpty) return chatId;
+
+      // Certains back renvoient { error, chat_id } si déjà existant
+      final existing = data['error'] != null ? data['chat_id']?.toString() : null;
+      if (existing != null && existing.isNotEmpty) return existing;
+
+      throw ApiException('Réponse inattendue: ${r.body}');
+    }
+    if (r.statusCode == 401) throw ApiException('Non autorisé (401).');
+    throw ApiException('Erreur serveur (${r.statusCode}) — ${r.body}');
+  }
+
+  Future<String> currentUserId() async {
+    final (_, userId) = await _auth();
+    return userId;
+  }
+
 
   void dispose() => _client.close();
 }
