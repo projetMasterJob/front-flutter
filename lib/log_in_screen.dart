@@ -15,11 +15,11 @@ class LogInScreen extends StatefulWidget {
 
 class _LogInScreenState extends State<LogInScreen> {
   final _formKey = GlobalKey<FormState>();
-  // Controllers pour gérer les champs de texte
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
   String? loginError;
 
   Future<void> loginUser(String email, String password) async {
@@ -36,7 +36,6 @@ class _LogInScreenState extends State<LogInScreen> {
       );
 
       if (response.statusCode == 200) {
-        // Connexion réussie, décoder le token et les données
         final data = jsonDecode(response.body);
         final accessToken = data['accessToken'];
 
@@ -89,7 +88,6 @@ class _LogInScreenState extends State<LogInScreen> {
     }
   }
 
-  // Méthode pour sauvegarder le token et l'ID utilisateur dans SharedPreferences
   Future<void> _saveUserData(String accessToken, Map<String, dynamic> decodedToken) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -105,7 +103,6 @@ class _LogInScreenState extends State<LogInScreen> {
     }
   }
 
-  // Méthode pour récupérer et sauvegarder les informations utilisateur depuis jobazur-api
   Future<void> getUserLoginInfos(String userId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -122,7 +119,6 @@ class _LogInScreenState extends State<LogInScreen> {
       if (response.statusCode == 200) {
         final userData = jsonDecode(response.body);
         
-        // Stocker les informations utilisateur dans SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('userinfo', jsonEncode(userData));
         
@@ -147,7 +143,7 @@ class _LogInScreenState extends State<LogInScreen> {
                 children: [
                   Image.asset(
                     './assets/images/logo.png',
-                    height: 250,
+                    height: 200,
                   ),
                   SizedBox(height: 10),
                 ],
@@ -182,12 +178,21 @@ class _LogInScreenState extends State<LogInScreen> {
                     SizedBox(height: 20),
                     TextFormField(
                       controller: passwordController,
-                      obscureText: true,
+                      obscureText: !_isPasswordVisible,
                       decoration: InputDecoration(
                         labelText: 'Mot de passe *',
                         hintText: 'votre mot de passe',
                         border: OutlineInputBorder(),
-                        suffixIcon: Icon(Icons.visibility),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -208,25 +213,6 @@ class _LogInScreenState extends State<LogInScreen> {
                   style: TextStyle(color: Colors.red, fontSize: 16),
                 ),
               ),
-            
-            Padding(
-              padding: const EdgeInsets.only(top: 10, right: 30),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  onTap: () {
-                    print("Mot de passe oublié");
-                  },
-                  child: Text(
-                    "Identifiants oubliés ?",
-                    style: TextStyle(
-                      color: Colors.blue,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-              ),
-            ),
 
             SizedBox(height: 20),
 
@@ -278,25 +264,6 @@ class _LogInScreenState extends State<LogInScreen> {
             ),
 
             Spacer(),
-
-            // Mentions légales
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                width: double.infinity,
-                color: Colors.grey[200],
-                padding: EdgeInsets.symmetric(vertical: 15),
-                child: TextButton(
-                  onPressed: () {
-                    print("Mentions légales");
-                  },
-                  child: Text(
-                    "Mentions légales",
-                    style: TextStyle(fontSize: 16, color: Colors.blue),
-                  ),
-                ),
-              ),
-            ),
             if (_isLoading)
             Container(
               color: Colors.black.withOpacity(0.5),

@@ -88,7 +88,6 @@ void main() {
   });
 }
 
-// Classe utilitaire pour tester la logique de shouldShowSearchButton
 class _FakeHomeMapState {
   final LatLng? originalLocation;
   final double displacementThreshold;

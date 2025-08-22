@@ -26,7 +26,10 @@ class LocationService {
       throw Exception('Permissions de géolocalisation non accordées');
     }
     
-    LocationData locationData = await _location.getLocation();
+    _location.enableBackgroundMode(enable: false);
+    
+    LocationData locationData = await _location.getLocation()
+        .timeout(const Duration(seconds: 10));
     
     if (locationData.latitude == null || locationData.longitude == null) {
       throw Exception('Impossible d\'obtenir les coordonnées de géolocalisation');
