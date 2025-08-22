@@ -6,6 +6,10 @@ class Application {
   final String email;
   final String phone;
   final String? address;
+  final int jobId;
+  final String jobTitle;
+  final String cvUrl;
+  final String description;
 
   Application({
     required this.firstName,
@@ -15,6 +19,10 @@ class Application {
     required this.address,
     required this.appliedAt,
     required this.status,
+    required this.jobId,
+    required this.jobTitle,
+    this.cvUrl = '',
+    this.description = '',
   });
 
   factory Application.fromJson(Map<String, dynamic> json) {
@@ -26,6 +34,10 @@ class Application {
       address: json['address'] ?? '',
       appliedAt: DateTime.parse(json['applied_at'] ?? ''),
       status: json['status'] ?? '',
+      jobId: int.tryParse(json['job_id'].toString()) ?? 0,
+      jobTitle: json['job_title'] ?? '',
+      cvUrl: (json['cv_url'] ?? json['cvUrl'] ?? '').toString(),
+      description: json['description'] ?? '',
     );
   }
 

@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:timeago/timeago.dart' as timeago;
 import 'job_list_page.dart';
+import 'application_list_page.dart';
 
 class CompanyDashboardPage extends StatefulWidget {
   const CompanyDashboardPage({super.key});
@@ -155,6 +156,7 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
                           "salary": j.salary,
                           "job_type": j.jobType,
                           "posted_at": j.postedAt,
+                          "applications_count": j.applicationsCount,
                         })
                         .toList(),
                     ),
@@ -267,8 +269,8 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
     String _fmtType(dynamic t) {
       final s = (t ?? '').toString().toLowerCase();
       switch (s) {
-        case 'cdi': return 'CDI';
-        case 'cdd': return 'CDD';
+        case 'full_time': return 'Temps plein';
+        case 'part_time': return 'Temps partiel';
         case 'freelance': return 'Freelance';
         case 'internship': return 'Stage';
         default: return (t ?? '—').toString();
@@ -286,7 +288,7 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
     }
 
     String _trailing(Map<String, dynamic> job) {
-      if (job.containsKey('candidats')) return "${job['candidats']} cand.";
+      if (job.containsKey('applications_count')) return "${job['applications_count']} cand.";
       if (job['salary'] != null && job['salary'].toString().isNotEmpty) {
         return job['salary'].toString();
       }
@@ -373,7 +375,9 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader("Candidatures reçues", "Voir tout", () {}),
+          _sectionHeader("Candidatures reçues", "Voir tout", () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const ApplicationListPage()));
+          }),
           const SizedBox(height: 12),
           if (applications.isEmpty)
             const Text("Aucune candidature")

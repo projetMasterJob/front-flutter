@@ -4,7 +4,7 @@ class Job {
   final String salary;
   final String jobType;
   final String postedAt;
-  final int candidats;
+  final int applicationsCount;
 
   Job({
     required this.title,
@@ -12,7 +12,7 @@ class Job {
     required this.salary,
     required this.jobType,
     required this.postedAt,
-    required this.candidats,
+    required this.applicationsCount,
   });
 
   factory Job.fromJson(Map<String, dynamic> json) {
@@ -20,9 +20,9 @@ class Job {
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       salary: json['salary'] ?? '',
-      jobType: json['jobType'] ?? '',
-      postedAt: json['postedAt'] ?? '',
-      candidats: (json['candidats'] ?? 0) as int,
+      jobType: json['job_type'] ?? '',
+      postedAt: json['posted_at'] ?? '',
+      applicationsCount: int.tryParse(json['applications_count']?.toString() ?? '0') ?? 0,
     );
   }
 }
