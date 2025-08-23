@@ -7,6 +7,7 @@ import 'log_in_screen.dart';
 import 'edit_profile.dart';
 import 'condition_utilisation.dart';
 import 'mention_legale.dart';
+import 'cv_management_screen.dart';
 
 class ProfilPage extends StatefulWidget {
   const ProfilPage({Key? key}) : super(key: key);
@@ -234,10 +235,21 @@ class _ProfilPageState extends State<ProfilPage> {
                       Row(
                         children: [
                           ElevatedButton.icon(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Bientôt disponible")),
-                              );
+                            onPressed: () async {
+                              final prefs = await SharedPreferences.getInstance();
+                              final userId = prefs.getString('user_id');
+                              if (userId != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CVManagementScreen(userId: userId),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Erreur: ID utilisateur non trouvé")),
+                                );
+                              }
                             },
                             icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
                             label: const Text('Mon CV', style: TextStyle(color: Colors.white)),
