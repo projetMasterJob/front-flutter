@@ -21,8 +21,8 @@ class CompanyService {
   CompanyService({http.Client? client}) : _client = client ?? http.Client();
   final http.Client _client;
 
-  String get _baseUrl => dotenv.get('BASE_URL', fallback: 'http://192.168.1.57:5000/api');
-  String get _chatUrl => dotenv.get('CHAT_URL');
+  final String _baseUrl = 'https://gestion-service.vercel.app/api';
+  final String _chatUrl = 'https://chat-service-six-red.vercel.app/api';
 
   // --- Helpers
   Future<(String token, String userId)> _auth() async {
