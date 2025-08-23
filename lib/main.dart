@@ -6,6 +6,8 @@ import 'template.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+import 'auth/services.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   timeago.setLocaleMessages('fr', timeago.FrMessages());

@@ -10,6 +10,9 @@ import 'job_list_page.dart';
 import 'application_list_page.dart';
 import 'new_job_page.dart';
 
+import 'auth/services.dart';
+import 'auth/access_compat.dart';
+
 class CompanyDashboardPage extends StatefulWidget {
   const CompanyDashboardPage({super.key});
   @override
@@ -24,12 +27,30 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
   void initState() {
     super.initState();
     _service = CompanyService();
-    _future = _service.fetchDashboardForCurrentUser(); // une seule fois
+    _future = _service.fetchDashboardForCurrentUser();
+
+    Future<void> verifyTokenStorage() async {
+      final accessSecure = await tokenStore.readAccess();
+      final refreshSecure = await tokenStore.readRefresh();
+      final accessPrefs  = await AccessCompat.get(); // option compat
+
+      debugPrint('ACCESS (SecureStorage): ${accessSecure != null ? 'OK' : 'ABSENT'}');
+      debugPrint('REFRESH (SecureStorage): ${refreshSecure != null ? 'OK' : 'ABSENT'}');
+      debugPrint('ACCESS (SharedPrefs)  : ${accessPrefs != null ? 'OK' : 'ABSENT'}');
+
+      // Facultatif : afficher un snippet (évite d'imprimer le token entier)
+      if (accessSecure != null) {
+        debugPrint('ACCESS snippet: ${accessSecure.substring(0, 24)}...');
+      }
+      if (refreshSecure != null) {
+        debugPrint('REFRESH length: ${refreshSecure.length}');
+      }
+    }
   }
 
   Future<void> _reload() async {
     setState(() {
-      _future = _service.fetchDashboardForCurrentUser(); // ⬅️ nouvelle Future
+      _future = _service.fetchDashboardForCurrentUser();
     });
   }
 

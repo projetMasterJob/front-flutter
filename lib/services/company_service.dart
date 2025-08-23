@@ -21,7 +21,7 @@ class CompanyService {
   CompanyService({http.Client? client}) : _client = client ?? http.Client();
   final http.Client _client;
 
-  String get _baseUrl => dotenv.get('BASE_URL', fallback: 'http://192.168.1.57:5000/api');
+  String get _baseUrl => dotenv.get('BASE_URL', fallback: 'https://gestion-service.vercel.app/api');
   String get _chatUrl => dotenv.get('CHAT_URL');
 
   // --- Helpers
@@ -39,18 +39,14 @@ class CompanyService {
   }
 
   Map<String, String> _headers(String token) => {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $token',
+  };
 
   // --- Endpoints unitaires
   Future<Company> fetchCompanyInfo() async {
     final (token, userId) = await _auth();
 
-    // Variante A (recommandée côté backend) : votre API lit l’ID via le token
-    //final uri = Uri.parse('$_baseUrl/companies/me');
-
-    // Variante B (si besoin du userId en query) :
     final uri = Uri.parse('$_baseUrl/companies/$userId');
 
     final r = await _client.get(uri, headers: _headers(token)).timeout(const Duration(seconds: 12));
@@ -97,16 +93,13 @@ class CompanyService {
 
   Future<void> updateApplicationStatus({
     required String applicationId,
-    required String status, // "accepted" ou "rejected"
+    required String status,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
-    if (token == null || token.isEmpty) throw Exception('Aucun token');
+    final (token, _) = await _auth();
 
     assert(status == 'accepted' || status == 'rejected',
         'status doit être "accepted" ou "rejected"');
 
-    //final (token, _) = await _auth();
     final uri = Uri.parse('$_baseUrl/companies/application/$applicationId');
 
     final r = await _client
@@ -118,21 +111,19 @@ class CompanyService {
         .timeout(const Duration(seconds: 12));
 
     if (r.statusCode >= 200 && r.statusCode < 300) {
-      return; // ✅ Succès (200/204)
+      return;
     }
     throw ApiException('Erreur ${r.statusCode} — ${r.body}');
   }
 
   Future<void> createJob({
-    required String companyId,        // UUID
+    required String companyId,
     required String title,
     required String description,
-    required String salary,           // "2200" (tu peux passer Number si ton back accepte)
-    required String jobType,          // 'full_time' | 'part_time' | 'interim'
+    required String salary,
+    required String jobType,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
-    if (token == null || token.isEmpty) throw Exception('Aucun token');
+    final (token, _) = await _auth();
 
     final uri = Uri.parse('$_baseUrl/companies/job');
 

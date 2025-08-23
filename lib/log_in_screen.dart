@@ -8,6 +8,9 @@ import 'template.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
+import 'auth/services.dart';
+import 'auth/token_store.dart';
+
 class LogInScreen extends StatefulWidget {
   @override
   _LogInScreenState createState() => _LogInScreenState();
@@ -37,12 +40,21 @@ class _LogInScreenState extends State<LogInScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final accessToken = data['accessToken'];
 
-        if (accessToken != null) {
+        final String? accessToken = data['accessToken'];
+        final String? refreshToken = data['refreshToken'];
+
+        if (accessToken != null && refreshToken != null) {
           try {
+            await tokenStore.save(TokenPair(
+              accessToken: accessToken,
+              refreshToken: refreshToken,
+            ));
+
+            await authClient.primeWithAccess(accessToken);
+
+
             final decodedToken = JwtDecoder.decode(accessToken);
-            print(decodedToken);
             await _saveUserData(accessToken, decodedToken);
             await getUserLoginInfos(decodedToken['id'].toString());
 
