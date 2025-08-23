@@ -101,6 +101,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
         _serviceEnabled = true;
         _isLoading = false;
       });
+      _loadDefaultMarkers();
       return;
     }
     try {
@@ -113,23 +114,45 @@ class _HomeMapPageState extends State<HomeMapPage> {
         _serviceEnabled = true;
         _isLoading = false;
       });
+      if (_mapController != null) {
+        _loadMarkersFromApi(
+          centerLat: position.latitude, 
+          centerLng: position.longitude, 
+          zoom: 12.0
+        );
+      }
     } catch (e) {
       setState(() {
         _serviceEnabled = false;
         _locationPermissionGranted = true;
         _isLoading = false;
       });
+      _loadDefaultMarkers();
     }
   }
 
-  // Fonction pour calculer si l'utilisateur s'est suffisamment éloigné
+  Future<void> _loadDefaultMarkers() async {
+    const double defaultLat = 43.7102;
+    const double defaultLng = 7.2620;
+    
+    setState(() {
+      _currentLocation = const LatLng(defaultLat, defaultLng);
+      _originalLocation = const LatLng(defaultLat, defaultLng);
+      _isLoading = false;
+    });
+    
+    await _loadMarkersFromApi(
+      centerLat: defaultLat,
+      centerLng: defaultLng,
+      zoom: 10.0
+    );
+  }
+
   bool _shouldShowSearchButton(LatLng currentPosition, double currentZoom) {
     if (_originalLocation == null) return false;
     
-    // Calculer la distance entre la position actuelle et l'origine
     double distance = LocationService.calculateDistance(_originalLocation!, currentPosition);
     
-    // Ajuster le seuil en fonction du zoom
     double adjustedThreshold = _displacementThreshold;
     if (currentZoom > 15) {
       adjustedThreshold = 0.2;
@@ -146,18 +169,17 @@ class _HomeMapPageState extends State<HomeMapPage> {
 
   Future<void> _loadMarkersFromApi({required double centerLat, required double centerLng, required double zoom, double radiusKm = 5.0}) async {
     setState(() {
-      _isLoading = true;
       _showSearchHereButton = false;
     });
     
     final url = Uri.parse('https://cartographielocal.vercel.app/map/entities?center_lat=$centerLat&center_lng=$centerLng&zoom_level=$zoom&radius_km=$radiusKm');
     
     try {
-      final response = await http.get(url);
-              if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          final List<dynamic> companies = data['companies'] ?? [];
-          final List<dynamic> jobs = data['jobs'] ?? [];
+      final response = await http.get(url).timeout(const Duration(seconds: 8));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List<dynamic> companies = data['companies'] ?? [];
+        final List<dynamic> jobs = data['jobs'] ?? [];
         final List<Point> points = [
           ...companies.map((e) => Point(
             id: e['id'],
@@ -182,12 +204,11 @@ class _HomeMapPageState extends State<HomeMapPage> {
             image_url: e['image_url'] ?? '',
           )),
         ]
-        // On filtre les points invalides
         .where((p) => p.latitude != 0.0 && p.longitude != 0.0)
         .toList();
         Set<Marker> markers = {};
         for (final point in points) {
-          final markerIcon = await _createMarkerIconWithImage(point.image_url, size: 100);
+          final markerIcon = await _createMarkerIconWithImage(point.image_url, size: 90);
           markers.add(Marker(
             markerId: MarkerId(point.title),
             position: LatLng(point.latitude, point.longitude),
@@ -199,25 +220,23 @@ class _HomeMapPageState extends State<HomeMapPage> {
           _markers = markers;
           _points = points;
           _isLoading = false;
-          // Le bouton s'affichera seulement si l'utilisateur s'est éloigné
         });
-              } else {
-          setState(() {
-            _markers = {};
-            _points = [];
-            _isLoading = false;
-          });
-        }
-          } catch (e) {
+      } else {
         setState(() {
           _markers = {};
           _points = [];
           _isLoading = false;
         });
       }
+    } catch (e) {
+      setState(() {
+        _markers = {};
+        _points = [];
+        _isLoading = false;
+      });
+    }
   }
 
-  // Nouvelle fonction pour charger seulement les points sans rafraîchir la carte
   Future<void> _loadPointsOnly({required double centerLat, required double centerLng, required double zoom, double radiusKm = 5.0}) async {
     setState(() {
       _isSearchButtonLoading = true;
@@ -226,7 +245,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
     final url = Uri.parse('https://cartographielocal.vercel.app/map/entities?center_lat=$centerLat&center_lng=$centerLng&zoom_level=$zoom&radius_km=$radiusKm');
     
     try {
-      final response = await http.get(url);
+      final response = await http.get(url).timeout(const Duration(seconds: 8));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final List<dynamic> companies = data['companies'] ?? [];
@@ -260,7 +279,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
         
         Set<Marker> markers = {};
         for (final point in points) {
-          final markerIcon = await _createMarkerIconWithImage(point.image_url, size: 100);
+          final markerIcon = await _createMarkerIconWithImage(point.image_url, size: 90);
           markers.add(Marker(
             markerId: MarkerId(point.title),
             position: LatLng(point.latitude, point.longitude),
@@ -299,7 +318,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
     final rrect = RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size, size), Radius.circular(4));
     canvas.drawRRect(rrect, paint);
 
-    // Téléchargement de l'image
     try {
       final response = await http.get(Uri.parse(imageUrl));
               if (response.statusCode == 200) {
@@ -308,7 +326,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
           final frame = await codec.getNextFrame();
           final image = frame.image;
 
-          // Dessine l'image sur le canvas (recouvre tout le carré)
           paintImage(
             canvas: canvas,
             rect: Rect.fromLTWH(0, 0, size, size),
@@ -609,112 +626,59 @@ class _HomeMapPageState extends State<HomeMapPage> {
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
     _mapController!.setMapStyle(_mapStyleHidePOI);
-    if (!hasCenteredOnce && _currentLocation != null) {
-      _mapController!.moveCamera(CameraUpdate.newLatLngZoom(_currentLocation!, 12.0));
+    if (!hasCenteredOnce) {
+      if (_currentLocation != null) {
+        _mapController!.moveCamera(CameraUpdate.newLatLngZoom(_currentLocation!, 12.0));
+        _loadMarkersFromApi(centerLat: _currentLocation!.latitude, centerLng: _currentLocation!.longitude, zoom: 12.0);
+      } else {
+        const defaultLocation = LatLng(43.7102, 7.2620);
+        _mapController!.moveCamera(CameraUpdate.newLatLngZoom(defaultLocation, 10.0));
+        _loadMarkersFromApi(centerLat: defaultLocation.latitude, centerLng: defaultLocation.longitude, zoom: 10.0);
+      }
       hasCenteredOnce = true;
-      _loadMarkersFromApi(centerLat: _currentLocation!.latitude, centerLng: _currentLocation!.longitude, zoom: 12.0);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-    // Cas 1 : Permission refusée (localisation non autorisée)
-    if (!_locationPermissionGranted) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.location_searching, size: 60, color: Colors.grey),
-              SizedBox(height: 16),
-              Text('Permission de localisation requise.', style: TextStyle(fontSize: 18)),
-              SizedBox(height: 8),
-              Text("Veuillez autoriser l'accès à la localisation."),
-              SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _openAppSettings,
-                child: Text("Ouvrir les paramètres de l'application"),
-              ),
-              SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: _initializeLocation,
-                child: Text('Réessayer'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    // Cas 2 : Localisation autorisée mais désactivée sur l'appareil
-    if (!_serviceEnabled) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.location_off, size: 60, color: Colors.grey),
-              SizedBox(height: 16),
-              Text('La localisation est désactivée.', style: TextStyle(fontSize: 18)),
-              SizedBox(height: 8),
-              Text('Veuillez activer la localisation pour utiliser la carte.'),
-              SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _openLocationSettings,
-                child: Text('Activer la localisation'),
-              ),
-              SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: _initializeLocation,
-                child: Text('Réessayer'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    // Cas 3 : Localisation autorisée et activée => loader ou carte
+    LatLng mapCenter = _currentLocation ?? const LatLng(43.7102, 7.2620);
+    
     return Scaffold(
-      body: (_currentLocation == null || _isLoading)
-          ? const Center(child: CircularProgressIndicator())
-          : Stack(
-              children: [
-                GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: _currentLocation!,
-                    zoom: 17.0,
-                  ),
-                  onMapCreated: _onMapCreated,
-                  onCameraMove: (position) {
-                    _lastCameraPosition = position;
-                  },
-                  onCameraIdle: () {
-                    if (_lastCameraPosition != null) {
-                      _lastIdleCameraPosition = _lastCameraPosition;
-                      bool shouldShow = _shouldShowSearchButton(
-                        _lastCameraPosition!.target,
-                        _lastCameraPosition!.zoom
-                      );
-                      setState(() {
-                        _showSearchHereButton = shouldShow;
-                      });
-                    }
-                  },
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                  compassEnabled: false,
-                  zoomControlsEnabled: false,
-                  zoomGesturesEnabled: true,
-                  rotateGesturesEnabled: true,
-                  tiltGesturesEnabled: true,
-                  mapToolbarEnabled: false,
-                  mapType: MapType.normal,
-                  markers: _markers,
-                ),
+      body: Stack(
+        children: [
+          GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: mapCenter,
+              zoom: _currentLocation != null ? 17.0 : 10.0,
+            ),
+            onMapCreated: _onMapCreated,
+            onCameraMove: (position) {
+              _lastCameraPosition = position;
+            },
+            onCameraIdle: () {
+              if (_lastCameraPosition != null) {
+                _lastIdleCameraPosition = _lastCameraPosition;
+                bool shouldShow = _shouldShowSearchButton(
+                  _lastCameraPosition!.target,
+                  _lastCameraPosition!.zoom
+                );
+                setState(() {
+                  _showSearchHereButton = shouldShow;
+                });
+              }
+            },
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+            compassEnabled: false,
+            zoomControlsEnabled: false,
+            zoomGesturesEnabled: true,
+            rotateGesturesEnabled: true,
+            tiltGesturesEnabled: true,
+            mapToolbarEnabled: false,
+            mapType: MapType.normal,
+            markers: _markers,
+          ),
+          
                 if (widget.search.isNotEmpty)
                   Positioned(
                     left: 16,
@@ -815,29 +779,29 @@ class _HomeMapPageState extends State<HomeMapPage> {
                       ),
                     ),
                   ),
-                Positioned(
-                  bottom: 102,
-                  right: 12,
-                  child: GestureDetector(
-                    onTap: () {
-                      if (_currentLocation != null && _mapController != null) {
-                        _mapController!.animateCamera(
-                          CameraUpdate.newCameraPosition(
-                            CameraPosition(
-                              target: _currentLocation!,
-                              zoom: 17.0,
-                            ),
-                          ),
-                        );
-                        setState(() {
-                          _isCenteredOnUser = true;
-                          if (_currentLocation != null) {
-                            _originalLocation = _currentLocation;
-                          }
-                          _showSearchHereButton = false;
-                        });
-                      }
-                    },
+                                 Positioned(
+                   bottom: 102,
+                   right: 12,
+                   child: GestureDetector(
+                     onTap: () {
+                       if (_currentLocation != null && _mapController != null) {
+                         _mapController!.animateCamera(
+                           CameraUpdate.newCameraPosition(
+                             CameraPosition(
+                               target: _currentLocation!,
+                               zoom: 17.0,
+                             ),
+                           ),
+                         );
+                         setState(() {
+                           _isCenteredOnUser = true;
+                           _originalLocation = _currentLocation;
+                           _showSearchHereButton = false;
+                         });
+                       } else {
+                         _initializeLocation();
+                       }
+                     },
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.8),

@@ -9,7 +9,9 @@ class DetailJobPage extends StatefulWidget {
   final String? jobId;
   final void Function(String type, {String? id})? onNavigateToDetail;
   final VoidCallback? onBack;
-  const DetailJobPage({Key? key, this.jobId, this.onNavigateToDetail, this.onBack}) : super(key: key);
+  const DetailJobPage(
+      {Key? key, this.jobId, this.onNavigateToDetail, this.onBack})
+      : super(key: key);
 
   @override
   State<DetailJobPage> createState() => _DetailJobPageState();
@@ -27,7 +29,8 @@ class _DetailJobPageState extends State<DetailJobPage> {
     final args = ModalRoute.of(context)?.settings.arguments;
     String? jobId = widget.jobId;
     if (args is String) jobId = args;
-    if (jobId == null && args is Map && args['jobId'] != null) jobId = args['jobId'];
+    if (jobId == null && args is Map && args['jobId'] != null)
+      jobId = args['jobId'];
     if (jobId != null) {
       _fetchJob(jobId);
     } else {
@@ -39,9 +42,13 @@ class _DetailJobPageState extends State<DetailJobPage> {
   }
 
   Future<void> _fetchJob(String jobId) async {
-    setState(() { isLoading = true; error = null; });
+    setState(() {
+      isLoading = true;
+      error = null;
+    });
     try {
-      final res = await http.get(Uri.parse('https://cartographielocal.vercel.app/jobs/$jobId'));
+      final res = await http
+          .get(Uri.parse('https://cartographielocal.vercel.app/jobs/$jobId'));
       if (res.statusCode == 200) {
         setState(() {
           jobData = json.decode(res.body);
@@ -49,7 +56,8 @@ class _DetailJobPageState extends State<DetailJobPage> {
         });
       } else {
         setState(() {
-          error = "Une erreur est survenue lors de la récupération des données de l'emploi sélectionné.";
+          error =
+              "Une erreur est survenue lors de la récupération des données de l'emploi sélectionné.";
           isLoading = false;
         });
       }
@@ -138,7 +146,8 @@ class _DetailJobPageState extends State<DetailJobPage> {
                       // Bloc principal infos job
                       Container(
                         margin: EdgeInsets.only(top: 0),
-                        padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.only(
@@ -154,7 +163,8 @@ class _DetailJobPageState extends State<DetailJobPage> {
                           ],
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 0),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 0),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
@@ -170,7 +180,8 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                     width: 50,
                                     height: 50,
                                     color: Colors.grey[200],
-                                    child: Icon(Icons.image, color: Colors.grey[400]),
+                                    child: Icon(Icons.image,
+                                        color: Colors.grey[400]),
                                   ),
                                 ),
                               ),
@@ -182,12 +193,16 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                   children: [
                                     Text(
                                       location['address'] ?? '',
-                                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600),
                                     ),
                                     SizedBox(height: 4),
                                     Text(
                                       location['cp'] ?? '',
-                                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey[700]),
                                     ),
                                   ],
                                 ),
@@ -198,21 +213,28 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                 child: ElevatedButton(
                                   onPressed: () async {
                                     final location = jobData?['location'] ?? {};
-                                    final double lat = (location['latitude'] ?? 0.0) * 1.0;
-                                    final double lng = (location['longitude'] ?? 0.0) * 1.0;
-                                    
+                                    final double lat =
+                                        (location['latitude'] ?? 0.0) * 1.0;
+                                    final double lng =
+                                        (location['longitude'] ?? 0.0) * 1.0;
+
                                     if (lat != 0.0 && lng != 0.0) {
-                                      final url = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
-                                      
+                                      final url =
+                                          'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
+
                                       try {
                                         final uri = Uri.parse(url);
                                         if (await canLaunchUrl(uri)) {
-                                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                          await launchUrl(uri,
+                                              mode: LaunchMode
+                                                  .externalApplication);
                                         } else {
-                                          print("Aucune application configurée pour naviguer");
+                                          print(
+                                              "Aucune application configurée pour naviguer");
                                         }
                                       } catch (e) {
-                                        print("Erreur lors de l'ouverture de la navigation: $e");
+                                        print(
+                                            "Erreur lors de l'ouverture de la navigation: $e");
                                       }
                                     }
                                   },
@@ -255,33 +277,43 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                 children: [
                                   Text(
                                     "Description",
-                                    style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF3264E0), fontSize: 16),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF3264E0),
+                                        fontSize: 16),
                                   ),
                                   Spacer(),
-                                  Image.asset('assets/images/mallette.png', width: 24, height: 24),
+                                  Image.asset('assets/images/mallette.png',
+                                      width: 24, height: 24),
                                 ],
                               ),
                               SizedBox(height: 16),
                               Text(
                                 jobData?['description'] ?? '',
-                                style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+                                style: TextStyle(
+                                    fontSize: 13, color: Colors.grey[800]),
                               ),
                               SizedBox(height: 16),
                               Row(
                                 children: [
                                   if (salary.isNotEmpty)
                                     Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 4),
                                       decoration: BoxDecoration(
                                         color: Color(0xFFFFE0B2),
                                         borderRadius: BorderRadius.circular(20),
                                       ),
-                                      child: Text('€ $salary', style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold)),
+                                      child: Text('€ $salary',
+                                          style: TextStyle(
+                                              color: Colors.deepOrange,
+                                              fontWeight: FontWeight.bold)),
                                     ),
                                   if (salary.isNotEmpty) SizedBox(width: 8),
                                   if (jobType.isNotEmpty)
                                     Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 4),
                                       decoration: BoxDecoration(
                                         color: Color(0xFFD0F5E8),
                                         borderRadius: BorderRadius.circular(20),
@@ -289,9 +321,15 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Image.asset('assets/images/horloge_verte.png', width: 12, height: 12),
+                                          Image.asset(
+                                              'assets/images/horloge_verte.png',
+                                              width: 12,
+                                              height: 12),
                                           SizedBox(width: 4),
-                                          Text(_jobTypeLabel(jobType), style: TextStyle(color: Colors.green[800], fontWeight: FontWeight.bold)),
+                                          Text(_jobTypeLabel(jobType),
+                                              style: TextStyle(
+                                                  color: Colors.green[800],
+                                                  fontWeight: FontWeight.bold)),
                                         ],
                                       ),
                                     ),
@@ -304,11 +342,14 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.calendar_month, size: 14, color: Colors.grey[700]),
+                                      Icon(Icons.calendar_month,
+                                          size: 14, color: Colors.grey[700]),
                                       SizedBox(width: 4),
                                       Text(
                                         formatDate(postedAt),
-                                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[700]),
                                       ),
                                     ],
                                   ),
@@ -347,7 +388,8 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                     width: 50,
                                     height: 50,
                                     color: Colors.grey[200],
-                                    child: Icon(Icons.business, color: Colors.grey[400]),
+                                    child: Icon(Icons.business,
+                                        color: Colors.grey[400]),
                                   ),
                                 ),
                               ),
@@ -356,20 +398,29 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text("Proposé par", style: TextStyle(fontSize: 13, color: Colors.grey[600], fontWeight: FontWeight.w500)),
+                                    Text("Proposé par",
+                                        style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey[600],
+                                            fontWeight: FontWeight.w500)),
                                     Text(
-                                      jobData?['company_name'] ?? "Agence", 
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF3264E0)),
+                                      jobData?['company_name'] ?? "Agence",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                          color: Color(0xFF3264E0)),
                                     ),
                                   ],
                                 ),
                               ),
                               ElevatedButton(
                                 onPressed: () {
-                                  final String? companyId = jobData?['company_id'];
+                                  final String? companyId =
+                                      jobData?['company_id'];
                                   if (companyId != null) {
                                     if (widget.onNavigateToDetail != null) {
-                                      widget.onNavigateToDetail!('company', id: companyId);
+                                      widget.onNavigateToDetail!('company',
+                                          id: companyId);
                                     }
                                   }
                                 },
@@ -377,8 +428,10 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue[700],
                                   foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  padding: EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10)),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 18, vertical: 8),
                                 ),
                               ),
                             ],
@@ -406,15 +459,21 @@ class _DetailJobPageState extends State<DetailJobPage> {
                             children: [
                               Row(
                                 children: [
-                                  Text("Candidature", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF3264E0), fontSize: 16)),
+                                  Text("Candidature",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF3264E0),
+                                          fontSize: 16)),
                                   Spacer(),
-                                  Image.asset('assets/images/candidature.png', width: 24, height: 24),
+                                  Image.asset('assets/images/candidature.png',
+                                      width: 24, height: 24),
                                 ],
                               ),
-                              SizedBox(height: 16), 
+                              SizedBox(height: 16),
                               Text(
                                 "Expliquez en quelques mots pourquoi ce poste vous intéresse. L'agence concernée vous contactera si votre profil correspond à l'offre proposée.",
-                                style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+                                style: TextStyle(
+                                    fontSize: 13, color: Colors.grey[800]),
                               ),
                               SizedBox(height: 16),
                               Container(
@@ -425,12 +484,15 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                 padding: EdgeInsets.all(8),
                                 child: Row(
                                   children: [
-                                    Image.asset('assets/images/info_bleue.png', width: 20, height: 20),
+                                    Image.asset('assets/images/info_bleue.png',
+                                        width: 20, height: 20),
                                     SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
                                         "Si un CV est rattaché à votre profil, il sera visible par l'auteur de cette offre.",
-                                        style: TextStyle(fontSize: 12, color: Colors.blue[900]),
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.blue[900]),
                                       ),
                                     ),
                                   ],
@@ -445,11 +507,13 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                   hintText: "Vos motivations...",
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: Colors.blue, width: 1.5),
+                                    borderSide: BorderSide(
+                                        color: Colors.blue, width: 1.5),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: Colors.blue, width: 2),
+                                    borderSide: BorderSide(
+                                        color: Colors.blue, width: 2),
                                   ),
                                 ),
                               ),
@@ -458,71 +522,64 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                 width: double.infinity,
                                 height: 48,
                                 child: ElevatedButton(
-                                  onPressed: () async {                                    
-                                    final prefs = await SharedPreferences.getInstance();
-                                    final userId = prefs.getString('user_id');                                    
-                                    final companyId = jobData?['company_id'];
-                                    final chatId = companyId;
-                                    
-                                    if (userId != null && chatId != null) {
+                                  onPressed: () async {
+                                    final prefs =
+                                        await SharedPreferences.getInstance();
+                                    final userId = prefs.getString('user_id');
+                                    final tokenJWT = prefs.getString('token');
+
+                                    if (userId != null &&
+                                        jobData?['id'] != null) {
                                       try {
-                                        final createChatUrl = Uri.parse('https://chat-service-six-red.vercel.app/api/chat/list');
-                                        final createChatBody = {
+                                        final createChatUrl = Uri.parse(
+                                            'https://gestion-service.vercel.app/api/users/application');
+                                        final createPostul = {
                                           'user_id': userId,
-                                          'company_id': chatId,
-                                        };                                                                                
-                                        final createChatResponse = await http.post(
+                                          'job_id': jobData?['id'],
+                                        };
+                                        final createPostulResponse =
+                                            await http.post(
                                           createChatUrl,
-                                          headers: {'Content-Type': 'application/json'},
-                                          body: jsonEncode(createChatBody),
+                                          headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': 'Bearer $tokenJWT'
+                                          },
+                                          body: jsonEncode(createPostul),
                                         );
-                                                                                
-                                        if (createChatResponse.statusCode == 200) {
-                                          final chatData = jsonDecode(createChatResponse.body);
-                                          final createdChatId = chatData['id'];                                          
-                                          final sendMessageUrl = Uri.parse('https://chat-service-six-red.vercel.app/api/chat/');
-                                          final messageContent = _motivationController.text.isEmpty 
-                                            ? 'Je suis intéressé(e) par votre offre d\'emploi.'
-                                            : _motivationController.text;
-                                          
-                                          final sendMessageBody = {
-                                            'chat_id': createdChatId,
-                                            'sender_id': userId,
-                                            'content': messageContent,
-                                          };
-                                                                                    
-                                          final sendMessageResponse = await http.post(
-                                            sendMessageUrl,
-                                            headers: {'Content-Type': 'application/json'},
-                                            body: jsonEncode(sendMessageBody),
+
+                                        if (createPostulResponse.statusCode ==
+                                            201) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                                content: Text(
+                                                    'Candidature envoyée avec succès!')),
                                           );
-                                                                                    
-                                          if (sendMessageResponse.statusCode == 200) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text('Candidature envoyée avec succès!')),
-                                            );
-                                          } else {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text('Erreur lors de l\'envoi du message.')),
-                                            );
-                                          }
                                         } else {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('Erreur lors de la création de la conversation.')),
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                                content: Text(
+                                                    'Erreur lors de l\'envoie de la candidature.')),
                                           );
                                         }
                                       } catch (e) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Échec de l\'envoi du message.')),
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text(
+                                                  'Échec de l\'envoi du de la candidature.')),
                                         );
                                       }
                                     }
                                   },
-                                  child: Text("Postuler", style: TextStyle(fontSize: 16)),
+                                  child: Text("Postuler",
+                                      style: TextStyle(fontSize: 16)),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.blue[700],
                                     foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8)),
                                   ),
                                 ),
                               ),
@@ -540,7 +597,8 @@ class _DetailJobPageState extends State<DetailJobPage> {
     final args = ModalRoute.of(context)?.settings.arguments;
     String? jobId = widget.jobId;
     if (args is String) jobId = args;
-    if (jobId == null && args is Map && args['jobId'] != null) jobId = args['jobId'];
+    if (jobId == null && args is Map && args['jobId'] != null)
+      jobId = args['jobId'];
     final bool canRetry = jobId != null;
     return Center(
       child: Column(
@@ -564,7 +622,8 @@ class _DetailJobPageState extends State<DetailJobPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
             )
@@ -576,7 +635,8 @@ class _DetailJobPageState extends State<DetailJobPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
             ),
@@ -588,7 +648,7 @@ class _DetailJobPageState extends State<DetailJobPage> {
   String formatDate(String isoDate) {
     try {
       final date = DateTime.parse(isoDate);
-      return "Publié le ${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} à "+
+      return "Publié le ${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} à " +
           "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
     } catch (e) {
       return '';
@@ -605,4 +665,4 @@ class _DetailJobPageState extends State<DetailJobPage> {
         return type;
     }
   }
-} 
+}
