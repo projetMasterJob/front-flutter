@@ -1,6 +1,6 @@
 class Application {
   final String id;
-  final String status;          // "pending" | "accepted" | "rejected"
+  final String status;
   final DateTime appliedAt;
   final String firstName;
   final String lastName;
@@ -73,7 +73,7 @@ class Application {
     email: email,
     phone: phone,
     address: address,
-    cvUrl: cvUrl,
+    cvUrl: cvUrl ?? this.cvUrl,
     description: description,
     jobTitle: jobTitle,
     userId: userId,

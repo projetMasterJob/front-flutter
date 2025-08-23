@@ -231,10 +231,6 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
                     candidateUserId: a.userId,          // depuis Application.userId
                     companyId: widget.companyId,        // passé à la page
                   );
-
-                  print('Chat ID: $chatId');
-                  print('User ID: $_companyUserId');
-
                   if (!mounted) return;
                   Navigator.pop(context); // ferme le loader
 
@@ -254,13 +250,6 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
                     SnackBar(content: Text('Impossible d’ouvrir la conversation : $e')),
                   );
                 }
-                //faire un appel api pour créer la conversation besoin de user_id (candidat) et company_id
-                //contrôler le retour
-                //si la conversation n'existe pas elle est créée il envoie 200 avec id de la conv
-                //ensuite avec l'id j'appelle la page donc navigator machin avec dedans l'id renvoyé juste avant et j'ai aussi besoin du user_id company
-                //si la conversation existe il renvoie 200 avec error en item + chat_id
-                //ensuite avec l'id j'appelle la page donc navigator machin avec dedans l'id renvoyé juste avant et j'ai aussi besoin du user_id company
-                //navigator push
               },
             );
           },
