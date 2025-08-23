@@ -91,10 +91,10 @@ class _JobsListPageState extends State<JobsListPage> {
 
   String _jobTypeLabel(String t) {
     switch (t.toLowerCase()) {
-      case 'cdi': return 'CDI';
-      case 'cdd': return 'CDD';
-      case 'freelance': return 'Freelance';
-      case 'internship': return 'Stage';
+      case 'full_time': return 'Temps plein';
+      case 'part_time': return 'Temps partiel';
+      case 'internship': return 'Intérim';
+      case 'contrat': return 'Contrat';
       default: return t;
     }
   }
@@ -145,13 +145,13 @@ class _JobsListPageState extends State<JobsListPage> {
             final desc  = j.description;
             final type  = _jobTypeLabel(j.jobType);
             final when  = _when(j.postedAt);
-            final salary = j.salary; // déjà string dans ton modèle
+            final salary = j.salary;
 
             return _JobCard(
               title: title,
               description: desc,
               bottomLine: "$type • $when",
-              badgeLabel: salary.isEmpty ? '—' : salary,
+              badgeLabel: salary.isEmpty ? '—' : salary + ' €',
             );
           },
         ),
