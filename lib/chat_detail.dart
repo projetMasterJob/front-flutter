@@ -6,11 +6,15 @@ import 'dart:developer';
 class ChatDetail extends StatefulWidget {
   final String chatId;
   final String userId;
+  final String? companyName;
+  final String? companyHandle;
 
   const ChatDetail({
     super.key,
     required this.chatId,
     required this.userId,
+    this.companyName,
+    this.companyHandle,
   });
 
   @override
@@ -174,10 +178,18 @@ class _ChatDetailState extends State<ChatDetail> {
 
   @override
   Widget build(BuildContext context) {
+    final title = widget.companyName ?? 'Conversation';
+    final handle = widget.companyHandle ?? '';
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Conversation'),
-        backgroundColor: Colors.blue,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title),
+            if (handle.isNotEmpty)
+              Text(handle, style: Theme.of(context).textTheme.bodySmall),
+          ],
+        ),
       ),
       body: Column(
         children: [
