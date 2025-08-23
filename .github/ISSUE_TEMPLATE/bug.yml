@@ -1,0 +1,87 @@
+name: 🐞 Bug
+description: Signaler une anomalie avec tous les éléments utiles
+labels: ['bug']
+body:
+  - type: input
+    id: title
+    attributes:
+      label: Titre court
+      placeholder: [Composant] Résumé actionnable
+    validations: { required: true }
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexte (version, environnement, rôle)
+      placeholder: "commit: abc123, env: docker-compose, date/heure…"
+    validations: { required: true }
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes de reproduction
+      placeholder: "1. …\n2. …\n3. …"
+    validations: { required: true }
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Résultat attendu
+    validations: { required: true }
+
+  - type: textarea
+    id: obtained
+    attributes:
+      label: Résultat obtenu
+    validations: { required: true }
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Preuves / artefacts
+      placeholder: "logs, captures, cURL, SQL/EXPLAIN…"
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Gravité (S)
+      options: [S1 Critique, S2 Élevée, S3 Moyenne, S4 Faible]
+    validations: { required: true }
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priorité (P)
+      options: [P1 Haute, P2 Moyenne, P3 Basse]
+    validations: { required: true }
+
+  - type: textarea
+    id: root_cause
+    attributes:
+      label: Analyse initiale (cause)
+      placeholder: "Hypothèse, où chercher, pourquoi ça survient…"
+
+  - type: textarea
+    id: fix
+    attributes:
+      label: Pistes de correction / plan de fix
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critères d’acceptation (validation)
+      placeholder: "Tests attendus, non-régression, environnements…"
+
+  - type: input
+    id: assignee
+    attributes:
+      label: Assigné à
+
+  - type: checkboxes
+    id: trace
+    attributes:
+      label: Traçabilité
+      options:
+        - label: Lien vers test KO ou nouveau test
+        - label: Lien vers PR/commit
+        - label: Lien vers build/deploy
