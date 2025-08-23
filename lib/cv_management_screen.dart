@@ -8,7 +8,7 @@ import 'services/document_service.dart';
 class CVManagementScreen extends StatefulWidget {
   final String userId;
 
-  const CVManagementScreen({Key? key, required this.userId}) : super(key: key);
+  const CVManagementScreen({super.key, required this.userId});
 
   @override
   _CVManagementScreenState createState() => _CVManagementScreenState();
@@ -20,6 +20,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
   Map<String, dynamic>? _currentCV;
   bool _isLoading = false;
   bool _isUploading = false;
+  static const int _maxFileSizeBytes = 5 * 1024 * 1024; // 5 Mo
 
   @override
   void initState() {
@@ -33,8 +34,8 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
     });
 
     try {
-      final documents = await _documentService.getUserDocuments(widget.userId);
-      final cv = await _documentService.getUserCV(widget.userId);
+      final List<Map<String, dynamic>> documents = await _documentService.getUserDocuments(widget.userId);
+      final Map<String, dynamic>? cv = await _documentService.getUserCV(widget.userId);
       
       setState(() {
         _documents = documents;
@@ -64,12 +65,19 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
         // Debug: afficher les informations du fichier sélectionné
         print('File selected: ${file.path}');
         print('File exists: ${await file.exists()}');
-        print('File size: ${await file.length()} bytes');
+        final int sizeBytes = await file.length();
+        print('File size: $sizeBytes bytes');
         print('File extension: ${file.path.split('.').last.toLowerCase()}');
         
         // Vérifier que c'est bien un PDF
         if (file.path.split('.').last.toLowerCase() != 'pdf') {
           throw Exception('Seuls les fichiers PDF sont acceptés');
+        }
+
+        // Vérifier la taille max 5 Mo (client-side)
+        if (sizeBytes > _maxFileSizeBytes) {
+          await _showTooLargeDialog(sizeBytes);
+          return;
         }
         
         setState(() {
@@ -97,9 +105,14 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
       setState(() {
         _isUploading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors de l\'upload: $e')),
-      );
+      final String err = e.toString().toLowerCase();
+      if (err.contains('file_too_large') || err.contains('413') || err.contains('payload') || err.contains('entity too large')) {
+        await _showTooLargeDialog(null);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur lors de l\'upload: $e')),
+        );
+      }
     }
   }
 
@@ -109,7 +122,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
         _isLoading = true;
       });
       
-      final downloadUrl = await _documentService.getDownloadUrl(documentId, widget.userId);
+      final String downloadUrl = await _documentService.getDocumentDownloadUrl(documentId);
       
       // Debug: afficher l'URL de téléchargement
       print('Download URL: $downloadUrl');
@@ -209,8 +222,8 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Supprimer'),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Supprimer'),
           ),
         ],
       ),
@@ -270,7 +283,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
                             ),
                             const SizedBox(height: 8),
                             const Text(
-                              'Formats acceptés: PDF uniquement',
+                              'Formats acceptés: PDF uniquement — 5 Mo max',
                               style: TextStyle(color: Colors.grey),
                             ),
                             const SizedBox(height: 16),
@@ -310,7 +323,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
                       Card(
                         child: ListTile(
                           leading: const Icon(Icons.description, color: Colors.blue),
-                          title: Text(_currentCV!['title'] ?? 'Mon CV'),
+                          title: Text(_safeTitle(_currentCV!['title'], fallback: 'Mon CV')),
                           subtitle: Text(
                             'Uploadé le ${_formatDate(_currentCV!['uploadedAt'])}',
                           ),
@@ -319,12 +332,52 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
                             children: [
                               IconButton(
                                 icon: const Icon(Icons.download, color: Colors.green),
-                                onPressed: () => _downloadCV(_currentCV!['id']),
+                                onPressed: () async {
+                                  try {
+                                    setState(() { _isLoading = true; });
+                                    final String url = await _documentService.getCvDownloadUrl(widget.userId);
+                                    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Erreur téléchargement CV: $e')),
+                                    );
+                                  } finally {
+                                    setState(() { _isLoading = false; });
+                                  }
+                                },
                                 tooltip: 'Télécharger',
                               ),
                               IconButton(
                                 icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _deleteCV(_currentCV!['id']),
+                                onPressed: () async {
+                                  final confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Confirmer la suppression'),
+                                      content: const Text('Supprimer votre CV actuel ?'),
+                                      actions: [
+                                        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
+                                        TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Supprimer')), 
+                                      ],
+                                    ),
+                                  );
+                                  if (confirmed == true) {
+                                    try {
+                                      setState(() { _isLoading = true; });
+                                      await _documentService.deleteUserCv(widget.userId);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('CV supprimé avec succès!')),
+                                      );
+                                      _loadDocuments();
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Erreur lors de la suppression: $e')),
+                                      );
+                                    } finally {
+                                      setState(() { _isLoading = false; });
+                                    }
+                                  }
+                                },
                                 tooltip: 'Supprimer',
                               ),
                             ],
@@ -334,67 +387,6 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
                     ],
                     
                     const SizedBox(height: 24),
-                    
-                    // All documents section
-                    if (_documents.isNotEmpty) ...[
-                      const Text(
-                        'Tous les documents',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ..._documents.map((doc) => Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          leading: const Icon(Icons.description),
-                          title: Text(doc['title'] ?? 'Document'),
-                          subtitle: Text(
-                            'Type: ${doc['type'] ?? 'unknown'} - Uploadé le ${_formatDate(doc['uploadedAt'])}',
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.download, color: Colors.green),
-                                onPressed: () => _downloadCV(doc['id']),
-                                tooltip: 'Télécharger',
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _deleteCV(doc['id']),
-                                tooltip: 'Supprimer',
-                              ),
-                            ],
-                          ),
-                        ),
-                      )).toList(),
-                    ],
-                    
-                    // Empty state
-                    if (_documents.isEmpty && _currentCV == null) ...[
-                      const SizedBox(height: 48),
-                      const Icon(
-                        Icons.folder_open,
-                        size: 64,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Aucun CV trouvé',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Uploader votre premier CV pour commencer',
-                        style: TextStyle(color: Colors.grey),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -402,13 +394,49 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
     );
   }
 
-  String _formatDate(String? dateString) {
-    if (dateString == null) return 'Date inconnue';
+  String _formatDate(dynamic value) {
+    if (value == null) return 'Date inconnue';
     try {
-      final date = DateTime.parse(dateString);
-      return '${date.day}/${date.month}/${date.year} à ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+      if (value is String) {
+        final date = DateTime.tryParse(value);
+        if (date != null) {
+          return '${date.day}/${date.month}/${date.year} à ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+        }
+      }
+      if (value is int) {
+        // Assume milliseconds since epoch
+        final date = DateTime.fromMillisecondsSinceEpoch(value);
+        return '${date.day}/${date.month}/${date.year} à ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+      }
+      // Unsupported shape (e.g., Buffer map)
+      return 'Date invalide';
     } catch (e) {
       return 'Date invalide';
     }
+  }
+
+  String _safeTitle(dynamic value, {String fallback = ''}) {
+    if (value == null) return fallback;
+    if (value is String) return value;
+    // Gestion des objets de type Buffer renvoyés éventuellement par le back
+    if (value is Map && value['type'] == 'Buffer') return fallback;
+    return value.toString();
+  }
+
+  Future<void> _showTooLargeDialog(int? sizeBytes) async {
+    final String sizeMo = sizeBytes != null ? (sizeBytes / (1024 * 1024)).toStringAsFixed(1) : '';
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Fichier trop volumineux'),
+        content: Text('Votre fichier ${sizeMo.isNotEmpty ? '(${sizeMo} Mo) ' : ''}est trop lourd. La taille maximale autorisée est de 5 Mo.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 }
