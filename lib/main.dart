@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'log_in_screen.dart';
 import 'detail_job.dart';
 import 'detail_company.dart';
-import 'template.dart';
+// import 'template.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  timeago.setLocaleMessages('fr', timeago.FrMessages());
+  timeago.setLocaleMessages('fr_short', timeago.FrShortMessages());
   runApp(const MyApp());
 }
 
@@ -22,8 +26,8 @@ class MyApp extends StatelessWidget {
       ),
       home: LogInScreen(), // La page de login reste la page d'accueil initiale
       routes: {
-        '/detail_job': (context) => DetailJobPage(),
-        '/detail_company': (context) => DetailCompanyPage(),
+        '/detail_job': (context) => const DetailJobPage(),
+        '/detail_company': (context) => const DetailCompanyPage(),
       },
     );
   }

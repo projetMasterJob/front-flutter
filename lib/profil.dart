@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher.dart';
 import 'log_in_screen.dart';
 import 'edit_profile.dart';
 import 'condition_utilisation.dart';
 import 'mention_legale.dart';
+import 'cv_management_screen.dart';
+import 'services/document_service.dart';
 
 class ProfilPage extends StatefulWidget {
   const ProfilPage({Key? key}) : super(key: key);
@@ -105,27 +106,64 @@ class _ProfilPageState extends State<ProfilPage> {
     }
   }
 
-  // Méthode pour supprimer le compte
-  // on affiche une dialog de confirmation pour supprimer le compte
-  // ensuite on supprime le compte via l'API et on supprime les SharedPreferences et on redirige vers la page de login
+  // Delete account: also delete user's documents (DB + S3) via document-service
   Future<void> deleteAccount() async {
     try {
+      final TextEditingController confirmController = TextEditingController();
+      final requiredPhrase = 'supprimer définitivement';
+      bool canConfirm = false;
+
       final shouldDelete = await showDialog<bool>(
         context: context,
+        barrierDismissible: false,
         builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Supprimer mon compte'),
-            content: Text('Vos données seront définitivement perdues et vous serez redirigé vers la page de connexion. Cette action est irréversible.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text('Annuler'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text('OK', style: TextStyle(color: Colors.red)),
-              ),
-            ],
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                title: const Text('Supprimer mon compte'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Cette action est définitive. Toutes vos données (compte, candidatures, CV et fichiers associés) seront supprimées définitivement.',
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Pour confirmer, tapez exactement: "$requiredPhrase"',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: confirmController,
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        hintText: 'supprimer définitivement',
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (val) {
+                        setState(() {
+                          canConfirm = val.trim().toLowerCase() == requiredPhrase;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Annuler'),
+                  ),
+                  ElevatedButton(
+                    onPressed: canConfirm ? () => Navigator.of(context).pop(true) : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                    child: const Text('Supprimer mon compte'),
+                  ),
+                ],
+              );
+            },
           );
         },
       );
@@ -135,8 +173,16 @@ class _ProfilPageState extends State<ProfilPage> {
         final userId = prefs.getString('user_id');
         
         if (userId != null) {
+          // 1) Try to delete all user documents (CV and others) from document-service
+          try {
+            final docService = DocumentService();
+            await docService.deleteUserCv(userId);
+          } catch (_) {
+            // Non-blocking: continue even if there is no CV or the deletion fails
+          }
+
+          // 2) Delete the user from the main service
           final token = prefs.getString('token');
-          
           final response = await http.delete(
             Uri.parse('https://gestion-service.vercel.app/api/users/$userId'),
             headers: {
@@ -234,10 +280,21 @@ class _ProfilPageState extends State<ProfilPage> {
                       Row(
                         children: [
                           ElevatedButton.icon(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Bientôt disponible")),
-                              );
+                            onPressed: () async {
+                              final prefs = await SharedPreferences.getInstance();
+                              final userId = prefs.getString('user_id');
+                              if (userId != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CVManagementScreen(userId: userId),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Erreur: ID utilisateur non trouvé")),
+                                );
+                              }
                             },
                             icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
                             label: const Text('Mon CV', style: TextStyle(color: Colors.white)),

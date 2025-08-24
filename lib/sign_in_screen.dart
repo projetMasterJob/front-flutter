@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'log_in_screen.dart';
+import 'condition_utilisation.dart';
 
 class SignInScreen extends StatefulWidget {
   @override
@@ -9,7 +12,7 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
-  // Controllers pour gérer les champs de texte
+  // Controllers pour gérer les champs utilisateur
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -17,31 +20,73 @@ class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController adresseController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
 
+  // Controllers pour gérer les champs de texte de l'entreprise
+  final companyNameController = TextEditingController();
+  final companyDescController = TextEditingController();
+  final companyWebsiteController = TextEditingController();
+
   bool isCompany = false;
   String? loginError;
 
-  Future<void> registerUser(String firstName, String lastName, String address, String phone, String userType, String email, String password) async {
+  @override
+  void dispose() {
+    firstNameController.dispose();
+    lastNameController.dispose();
+    adresseController.dispose();
+    phoneController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    companyNameController.dispose();
+    companyDescController.dispose();
+    companyWebsiteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> registerUser(
+    String firstName, 
+    String lastName, 
+    String address, 
+    String phone, 
+    String userType, 
+    String email, 
+    String password, {
+    String? companyName,
+    String? companyDescription,
+    String? companyWebsite,
+    String? companyLogoPath
+  }) async {
     setState(() {
       loginError = null;
     });
+
+    final Map<String, dynamic> payload = {
+      'first_name': firstName.trim(),
+      'last_name': lastName.trim(),
+      'email': email.trim().toLowerCase(),
+      'password': password,
+      'address': address.trim(),
+      'phone': phone.trim(),
+      'role': isCompany ? 'pro' : 'user',
+    };
+
+    // Si entreprise, on ajoute l'objet company
+    if (isCompany) {
+      payload['company'] = {
+        'name': companyNameController.text.trim(),
+        'description': companyDescController.text.trim(),
+        'website': companyWebsiteController.text.trim(),
+      };
+    }
 
     try {
       final response = await http.post(
         Uri.parse('https://auth-service-kohl.vercel.app/api/auth/register'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'first_name': firstName,
-          'last_name': lastName,
-          'email': email,
-          'password': password,
-          'address': address,
-          'phone': phone,
-          'role': userType,
-        }),
+        body: jsonEncode(payload),
       );
 
       if (response.statusCode == 201) {
-        final data = jsonDecode(response.body);
+        // final data = jsonDecode(response.body);
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -57,6 +102,12 @@ class _SignInScreenState extends State<SignInScreen> {
             ],
           ),
         );
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LogInScreen()),
+            (route) => false,
+          );
+        }
       } else {
         print('Erreur lors de l\'inscription : ${response.body}');
         setState(() {
@@ -75,6 +126,15 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5FCF9),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+          tooltip: 'Retour',
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -84,7 +144,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 children: [
                   Image.asset(
                     'assets/images/logo.png',
-                    height: 250,
+                    height: 200,
                   ),
                 ],
               ),
@@ -234,6 +294,10 @@ class _SignInScreenState extends State<SignInScreen> {
                           return null;
                         },
                       ),
+                      if(isCompany) ...[
+                        SizedBox(height: 15),
+                        _buildCompanySection(),
+                      ],
                     ],
                   ),
                 ),
@@ -262,6 +326,10 @@ class _SignInScreenState extends State<SignInScreen> {
                       isCompany ? 'pro' : 'user',
                       emailController.text,
                       passwordController.text,
+                      // Nouveaux paramètres (à ajouter dans la signature de registerUser)
+                      companyName: isCompany ? companyNameController.text.trim() : null,
+                      companyDescription: isCompany ? companyDescController.text.trim() : null,
+                      companyWebsite: isCompany ? companyWebsiteController.text.trim() : null,
                     );
                   }
                 },
@@ -278,20 +346,26 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
               ),
             ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                width: double.infinity,
-                color: Colors.grey[200],
-                padding: EdgeInsets.symmetric(vertical: 15),
-                child: TextButton(
-                  onPressed: () {
-                    print("Mentions légales");
-                  },
-                  child: Text(
-                    "Mentions légales",
-                    style: TextStyle(fontSize: 16, color: Colors.blue),
-                  ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  children: [
+                    const TextSpan(text: "En vous inscrivant, vous acceptez les "),
+                    TextSpan(
+                      text: "Conditions d'utilisation",
+                      style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const ConditionUtilisationPage()),
+                          );
+                        },
+                    ),
+                    const TextSpan(text: " de Jobazur"),
+                  ],
                 ),
               ),
             ),
@@ -300,4 +374,81 @@ class _SignInScreenState extends State<SignInScreen> {
       ),
     );
   }
+
+  // Section entreprise
+  Widget _buildCompanySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        const Divider(),
+        const SizedBox(height: 10),
+        const Text(
+          "Informations entreprise",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        const SizedBox(height: 12),
+
+        // Nom de l’entreprise
+        TextFormField(
+          controller: companyNameController,
+          decoration: const InputDecoration(
+            labelText: 'Nom de l’entreprise *',
+            hintText: 'ex: Acme SAS',
+            border: OutlineInputBorder(),
+          ),
+          validator: (value) {
+            if (!isCompany) return null;
+            if (value == null || value.trim().isEmpty) {
+              return "Veuillez entrer le nom de l’entreprise";
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 15),
+
+        // Description
+        TextFormField(
+          controller: companyDescController,
+          decoration: const InputDecoration(
+            labelText: 'Description *',
+            hintText: 'Décrivez brièvement votre activité',
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 3,
+          validator: (value) {
+            if (!isCompany) return null;
+            if (value == null || value.trim().isEmpty) {
+              return "Veuillez entrer une description";
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 15),
+
+        // Site web
+        TextFormField(
+          controller: companyWebsiteController,
+          keyboardType: TextInputType.url,
+          decoration: const InputDecoration(
+            labelText: 'Site web (URL) *',
+            hintText: 'https://exemple.com',
+            border: OutlineInputBorder(),
+          ),
+          validator: (value) {
+            if (!isCompany) return null;
+            if (value == null || value.trim().isEmpty) {
+              return "Veuillez entrer l’URL du site";
+            }
+            final urlReg = RegExp(r'^(https?:\/\/)?([^\s.]+\.[^\s]{2,}|localhost)(\/\S*)?$');
+            if (!urlReg.hasMatch(value.trim())) {
+              return "URL invalide (ex: https://exemple.com)";
+            }
+            return null;
+          },
+        ),        
+      ],
+    );
+  }
+
 }

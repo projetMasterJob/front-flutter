@@ -1,0 +1,111 @@
+name: "🐞 Bug"
+description: "Signaler une anomalie avec tous les éléments utiles"
+title: "[BUG] <titre court>"
+labels: ["bug"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: "Merci de compléter tous les champs requis (marqués *)."
+
+  - type: input
+    id: context_version
+    attributes:
+      label: "Version / commit *"
+      description: "Ex : abc123 ou v1.2.3"
+      placeholder: "abc123"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: "Environnement *"
+      options:
+        - local
+        - docker-compose
+        - preprod
+        - prod
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Étapes de reproduction *"
+      placeholder: "1. …\n2. …\n3. …"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Résultat attendu *"
+    validations:
+      required: true
+
+  - type: textarea
+    id: obtained
+    attributes:
+      label: "Résultat obtenu *"
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: "Preuves / artefacts"
+      description: "Logs, captures, cURL, SQL/EXPLAIN…"
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: "Gravité (S) *"
+      options:
+        - "S1 Critique"
+        - "S2 Élevée"
+        - "S3 Moyenne"
+        - "S4 Faible"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Priorité (P) *"
+      options:
+        - "P1 Haute"
+        - "P2 Moyenne"
+        - "P3 Basse"
+    validations:
+      required: true
+
+  - type: textarea
+    id: root_cause
+    attributes:
+      label: "Analyse initiale (cause)"
+
+  - type: textarea
+    id: fix
+    attributes:
+      label: "Pistes de correction / plan de fix"
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: "Critères d’acceptation (validation)"
+      description: "Tests attendus, non-régression, environnements…"
+
+  - type: checkboxes
+    id: trace
+    attributes:
+      label: "Traçabilité"
+      options:
+        - label: "Lien vers test KO ou nouveau test"
+        - label: "Lien vers PR/commit"
+        - label: "Lien vers build/deploy"
+
+  - type: input
+    id: assignee
+    attributes:
+      label: "Assigné à"
