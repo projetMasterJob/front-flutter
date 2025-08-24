@@ -3,14 +3,8 @@ import 'log_in_screen.dart';
 import 'detail_job.dart';
 import 'detail_company.dart';
 import 'template.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:timeago/timeago.dart' as timeago;
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  timeago.setLocaleMessages('fr', timeago.FrMessages());
-  timeago.setLocaleMessages('fr_short', timeago.FrShortMessages());
-  await dotenv.load(fileName: ".env");
+void main() {
   runApp(const MyApp());
 }
 
@@ -21,15 +15,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'JobAzur',
+      title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
       home: LogInScreen(), // La page de login reste la page d'accueil initiale
       routes: {
-        '/detail_job': (context) => DetailJobPage(),
-        '/detail_company': (context) => DetailCompanyPage(),
+        '/detail_job': (context) => const DetailJobPage(),
+        '/detail_company': (context) => const DetailCompanyPage(),
       },
     );
   }

@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../models/company_dashboard_data.dart';
 import '../models/company.dart';
@@ -83,16 +82,22 @@ class CompanyService {
 
   // --- Agrégateur pour ton écran
   Future<CompanyDashboardData> fetchDashboardForCurrentUser() async {
-    final results = await Future.wait([
-      fetchCompanyInfo(),
-      fetchCompanyJobs(page: 1, limit: 10),
-      fetchCompanyApplications(page: 1, limit: 10),
-    ]);
-    return CompanyDashboardData(
-      company: results[0] as Company,
-      jobs: results[1] as List<Job>,
-      applications: results[2] as List<Application>,
-    );
+    try {
+      final results = await Future.wait([
+        fetchCompanyInfo(),
+        fetchCompanyJobs(page: 1, limit: 10),
+        fetchCompanyApplications(page: 1, limit: 10),
+      ]);
+      return CompanyDashboardData(
+        company: results[0] as Company,
+        jobs: results[1] as List<Job>,
+        applications: results[2] as List<Application>,
+      );
+    } catch (e) {
+      print('❌ Error in fetchDashboardForCurrentUser: $e');
+      // Retourner une erreur contrôlée au lieu de faire planter l'app
+      throw ApiException('Erreur lors du chargement du tableau de bord: $e');
+    }
   }
 
   Future<void> updateApplicationStatus({

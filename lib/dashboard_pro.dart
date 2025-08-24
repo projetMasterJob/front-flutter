@@ -71,7 +71,7 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
                         Navigator.of(context).pushReplacement(
                           PageRouteBuilder(
                             pageBuilder: (_, __, ___) =>
-                                CompanyDashboardPage(),
+                                const CompanyDashboardPage(),
                             transitionDuration: Duration.zero,
                           ),
                         );
@@ -293,7 +293,7 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
   }
 
   Widget _buildJobSection(List<Map<String, dynamic>> jobs) {
-    String _fmtType(dynamic t) {
+    String fmtType(dynamic t) {
       final s = (t ?? '').toString().toLowerCase();
       switch (s) {
         case 'full_time': return 'Temps plein';
@@ -304,7 +304,7 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
       }
     }
 
-    String _fmtDate(dynamic v) {
+    String fmtDate(dynamic v) {
       if (v == null) return '—';
       if (v is DateTime) return timeago.format(v.toLocal(), locale: 'fr_short');
       try {
@@ -314,7 +314,7 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
       }
     }
 
-    String _trailing(Map<String, dynamic> job) {
+    String trailing(Map<String, dynamic> job) {
       if (job.containsKey('applications_count')) return "${job['applications_count']} cand.";
       if (job['salary'] != null && job['salary'].toString().isNotEmpty) {
         return job['salary'].toString();
@@ -345,8 +345,8 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
 
                 final subtitleParts = <String>[];
                 if (loc != null && loc.toString().isNotEmpty) subtitleParts.add(loc.toString());
-                subtitleParts.add(_fmtType(type));
-                subtitleParts.add(_fmtDate(date));
+                subtitleParts.add(fmtType(type));
+                subtitleParts.add(fmtDate(date));
 
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -354,7 +354,7 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
                   title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: Text(subtitleParts.join(' • ')),
                   trailing: Text(
-                    _trailing(job),
+                    trailing(job),
                     style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                   ),
                 );
@@ -369,7 +369,7 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
       required VoidCallback onSeeAll, // ⬅️ nouveau
   }) 
   {
-    Color _statusColor(String s) {
+    Color statusColor(String s) {
       switch (s.toLowerCase()) {
         case 'à étudier':
         case 'a etudier':
@@ -388,12 +388,12 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
       }
     }
 
-    String _safeStr(dynamic v, [String fallback = '—']) {
+    String safeStr(dynamic v, [String fallback = '—']) {
       final s = v?.toString().trim() ?? '';
       return s.isEmpty ? fallback : s;
     }
 
-    String _initial(String name) {
+    String initial(String name) {
       final s = name.trim();
       return s.isEmpty ? '?' : s.characters.first.toUpperCase();
     }
@@ -412,23 +412,23 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
           else
             Column(
               children: applications.map((app) {
-                final name   = _safeStr(app['name'], 'Inconnu');
-                final job    = _safeStr(app['job']);
-                final date   = _safeStr(app['date']);
-                final status = _safeStr(app['status'], 'À étudier');
+                final name   = safeStr(app['name'], 'Inconnu');
+                final job    = safeStr(app['job']);
+                final date   = safeStr(app['date']);
+                final status = safeStr(app['status'], 'À étudier');
 
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: CircleAvatar(
                     backgroundColor: Colors.grey[200],
-                    child: Text(_initial(name)),
+                    child: Text(initial(name)),
                   ),
                   title: Text(name),
                   subtitle: Text("$job • $date"),
                   trailing: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _statusColor(status).withOpacity(0.15),
+                      color: statusColor(status).withOpacity(0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -436,7 +436,7 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: _statusColor(status),
+                        color: statusColor(status),
                       ),
                     ),
                   ),

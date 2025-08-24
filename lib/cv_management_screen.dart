@@ -429,7 +429,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Fichier trop volumineux'),
-        content: Text('Votre fichier ${sizeMo.isNotEmpty ? '(${sizeMo} Mo) ' : ''}est trop lourd. La taille maximale autorisée est de 5 Mo.'),
+        content: Text('Votre fichier ${sizeMo.isNotEmpty ? '($sizeMo Mo) ' : ''}est trop lourd. La taille maximale autorisée est de 5 Mo.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
