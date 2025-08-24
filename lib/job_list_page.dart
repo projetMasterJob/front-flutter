@@ -107,7 +107,7 @@ class _JobsListPageState extends State<JobsListPage> {
     if (_error != null) {
       return Scaffold(
         backgroundColor: Colors.white,
-        appBar: AppBar(title: const Text('Emplois publiés')),
+        appBar: AppBar(title: const Text('Emplois publiéeeeeeeeeees')),
         body: Center(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Text(_error!, textAlign: TextAlign.center),
@@ -162,7 +162,6 @@ class _JobsListPageState extends State<JobsListPage> {
 
 class _JobCard extends StatefulWidget {
   const _JobCard({
-    super.key,
     required this.title,
     required this.description,
     required this.bottomLine,
