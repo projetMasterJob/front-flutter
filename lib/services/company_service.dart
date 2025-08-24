@@ -203,6 +203,25 @@ class CompanyService {
     return userId;
   }
 
+  // Récupère l'URL du CV d'une candidature
+  Future<String?> getCvUrl({required String applicationId}) async {
+    final (token, _) = await _auth();
+    final uri = Uri.parse('$_baseUrl/applications/$applicationId/cv');
+
+    final r = await _client
+        .get(uri, headers: _headers(token))
+        .timeout(const Duration(seconds: 12));
+
+    if (r.statusCode == 404) return null; // pas de CV
+    if (r.statusCode != 200) {
+      throw ApiException('CV: erreur ${r.statusCode}');
+    }
+
+    final body = json.decode(r.body) as Map<String, dynamic>;
+    final url = (body['url'] ?? body['cv_url'] ?? body['cvUrl'] ?? '').toString();
+    return url.isEmpty ? null : url;
+  }
+
 
   void dispose() => _client.close();
 }

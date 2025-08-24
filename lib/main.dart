@@ -4,7 +4,10 @@ import 'detail_job.dart';
 import 'detail_company.dart';
 import 'template.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  timeago.setLocaleMessages('fr', timeago.FrMessages());
+  timeago.setLocaleMessages('fr_short', timeago.FrShortMessages());
   runApp(const MyApp());
 }
 

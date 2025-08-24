@@ -9,6 +9,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'job_list_page.dart';
 import 'application_list_page.dart';
 import 'new_job_page.dart';
+import 'package:intl/intl.dart';
 
 class CompanyDashboardPage extends StatefulWidget {
   const CompanyDashboardPage({super.key});
@@ -150,7 +151,7 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
                               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                             ),
                             Text(
-                              "Membre depuis le ${c.createdAt}",
+                              "Membre depuis le ${DateFormat('dd/MM/yyyy').format(c.createdAt)}",
                               style: const TextStyle(
                                   fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
                             ),
@@ -424,7 +425,7 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
                     child: Text(initial(name)),
                   ),
                   title: Text(name),
-                  subtitle: Text("$job • $date"),
+                  subtitle: Text("$date"),
                   trailing: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
