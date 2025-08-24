@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'privacy_policy_page.dart';
+import 'log_in_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -46,7 +47,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        showDialog(
+        await showDialog(
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Succès'),
@@ -61,6 +62,13 @@ class _SignInScreenState extends State<SignInScreen> {
             ],
           ),
         );
+        // Redirect to login screen after confirmation
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => LogInScreen()),
+            (route) => false,
+          );
+        }
       } else {
         print('Erreur lors de l\'inscription : ${response.body}');
         setState(() {
@@ -79,6 +87,15 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5FCF9),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+          tooltip: 'Retour',
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -232,7 +249,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             return "Ajoutez au moins un chiffre";
                           }
                           // Au moins un caractère spécial
-                          if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
+                          if (!RegExp(r'[!@#\$%\^&*(),.?":{}|<>]').hasMatch(value)) {
                             return "Ajoutez au moins un caractère spécial";
                           }
                           return null;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import 'log_in_screen.dart';
 import 'detail_job.dart';
 import 'detail_company.dart';
