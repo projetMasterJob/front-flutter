@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'privacy_policy_page.dart';
+import 'log_in_screen.dart';
 
 class SignInScreen extends StatefulWidget {
+  const SignInScreen({super.key});
+
   @override
   _SignInScreenState createState() => _SignInScreenState();
 }
 
 class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
-  // Controllers pour gérer les champs utilisateur
+  // Controllers pour gérer les champs de texte
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -17,88 +22,53 @@ class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController adresseController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
 
-  // Controllers pour gérer les champs de texte de l'entreprise
-  final companyNameController = TextEditingController();
-  final companyDescController = TextEditingController();
-  final companyWebsiteController = TextEditingController();
-
   bool isCompany = false;
   String? loginError;
 
-  @override
-  void dispose() {
-    firstNameController.dispose();
-    lastNameController.dispose();
-    adresseController.dispose();
-    phoneController.dispose();
-    emailController.dispose();
-    passwordController.dispose();
-    companyNameController.dispose();
-    companyDescController.dispose();
-    companyWebsiteController.dispose();
-    super.dispose();
-  }
-
-  Future<void> registerUser(
-    String firstName, 
-    String lastName, 
-    String address, 
-    String phone, 
-    String userType, 
-    String email, 
-    String password, {
-    String? companyName,
-    String? companyDescription,
-    String? companyWebsite,
-    String? companyLogoPath
-  }) async {
+  Future<void> registerUser(String firstName, String lastName, String address, String phone, String userType, String email, String password) async {
     setState(() {
       loginError = null;
     });
-
-    final Map<String, dynamic> payload = {
-      'first_name': firstName.trim(),
-      'last_name': lastName.trim(),
-      'email': email.trim().toLowerCase(),
-      'password': password,
-      'address': address.trim(),
-      'phone': phone.trim(),
-      'role': isCompany ? 'pro' : 'user',
-    };
-
-    // Si entreprise, on ajoute l'objet company
-    if (isCompany) {
-      payload['company'] = {
-        'name': companyNameController.text.trim(),
-        'description': companyDescController.text.trim(),
-        'website': companyWebsiteController.text.trim(),
-      };
-    }
 
     try {
       final response = await http.post(
         Uri.parse('https://auth-service-kohl.vercel.app/api/auth/register'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(payload),
+        body: jsonEncode({
+          'first_name': firstName,
+          'last_name': lastName,
+          'email': email,
+          'password': password,
+          'address': address,
+          'phone': phone,
+          'role': userType,
+        }),
       );
 
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        showDialog(
+        await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Succès'),
-            content: Text('Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.'),
+            title: const Text('Succès'),
+            content: const Text('Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.'),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: Text('OK'),
+                child: const Text('OK'),
               ),
             ],
           ),
         );
+        // Redirect to login screen after confirmation
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => LogInScreen()),
+            (route) => false,
+          );
+        }
       } else {
         print('Erreur lors de l\'inscription : ${response.body}');
         setState(() {
@@ -117,33 +87,42 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5FCF9),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+          tooltip: 'Retour',
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             Center(
               child: Column(
                 children: [
                   Image.asset(
                     'assets/images/logo.png',
-                    height: 200,
+                    height: 250,
                   ),
                 ],
               ),
             ),
 
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Switch "Êtes-vous une entreprise ?"
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Row(
                 children: [
-                  Text(
+                  const Text(
                     "Êtes-vous une entreprise ?",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  Spacer(),
+                  const Spacer(),
                   Switch(
                     value: isCompany,
                     onChanged: (value) {
@@ -158,7 +137,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: Form(
                   key: _formKey,
                   autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -166,7 +145,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     children: [
                       TextFormField(
                         controller: firstNameController,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Prénom *',
                           hintText: 'votre prénom',
                           border: OutlineInputBorder(),
@@ -178,10 +157,10 @@ class _SignInScreenState extends State<SignInScreen> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
                       TextFormField(
                         controller: lastNameController,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Nom de famille *',
                           hintText: 'votre nom de famille',
                           border: OutlineInputBorder(),
@@ -193,10 +172,10 @@ class _SignInScreenState extends State<SignInScreen> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
                       TextFormField(
                         controller: adresseController,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Adresse postale *',
                           hintText: 'votre adresse postale',
                           border: OutlineInputBorder(),
@@ -208,11 +187,11 @@ class _SignInScreenState extends State<SignInScreen> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
                       TextFormField(
                         controller: phoneController,
                         keyboardType: TextInputType.phone,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Téléphone *',
                           hintText: 'votre numéro de téléphone',
                           border: OutlineInputBorder(),
@@ -224,10 +203,10 @@ class _SignInScreenState extends State<SignInScreen> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
                       TextFormField(
                         controller: emailController,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Adresse mail *',
                           hintText: 'votre adresse mail',
                           border: OutlineInputBorder(),
@@ -242,10 +221,10 @@ class _SignInScreenState extends State<SignInScreen> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
                       TextFormField(
                         controller: passwordController,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Mot de passe',
                           hintText: 'votre mot de passe',
                           border: OutlineInputBorder(),
@@ -270,16 +249,12 @@ class _SignInScreenState extends State<SignInScreen> {
                             return "Ajoutez au moins un chiffre";
                           }
                           // Au moins un caractère spécial
-                          if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
+                          if (!RegExp(r'[!@#\$%\^&*(),.?":{}|<>]').hasMatch(value)) {
                             return "Ajoutez au moins un caractère spécial";
                           }
                           return null;
                         },
                       ),
-                      if(isCompany) ...[
-                        SizedBox(height: 15),
-                        _buildCompanySection(),
-                      ],
                     ],
                   ),
                 ),
@@ -290,7 +265,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 padding: const EdgeInsets.only(top: 12.0),
                 child: Text(
                   loginError!,
-                  style: TextStyle(color: Colors.red, fontSize: 16),
+                  style: const TextStyle(color: Colors.red, fontSize: 16),
                 ),
               ),
 
@@ -308,106 +283,49 @@ class _SignInScreenState extends State<SignInScreen> {
                       isCompany ? 'pro' : 'user',
                       emailController.text,
                       passwordController.text,
-                      // Nouveaux paramètres (à ajouter dans la signature de registerUser)
-                      companyName: isCompany ? companyNameController.text.trim() : null,
-                      companyDescription: isCompany ? companyDescController.text.trim() : null,
-                      companyWebsite: isCompany ? companyWebsiteController.text.trim() : null,
                     );
                   }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
-                  minimumSize: Size(double.infinity, 50),
+                  minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(
+                child: const Text(
                   "Inscription",
                   style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  children: [
+                    const TextSpan(text: "En vous inscrivant, vous acceptez les "),
+                    TextSpan(
+                      text: "Conditions d'utilisation",
+                      style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const PrivacyPolicyPage()),
+                          );
+                        },
+                    ),
+                    const TextSpan(text: " de Jobazur"),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox.shrink(),
           ],
         ),
       ),
     );
   }
-
-  // Section entreprise
-  Widget _buildCompanySection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 10),
-        const Divider(),
-        const SizedBox(height: 10),
-        const Text(
-          "Informations entreprise",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        const SizedBox(height: 12),
-
-        // Nom de l’entreprise
-        TextFormField(
-          controller: companyNameController,
-          decoration: const InputDecoration(
-            labelText: 'Nom de l’entreprise *',
-            hintText: 'ex: Acme SAS',
-            border: OutlineInputBorder(),
-          ),
-          validator: (value) {
-            if (!isCompany) return null;
-            if (value == null || value.trim().isEmpty) {
-              return "Veuillez entrer le nom de l’entreprise";
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 15),
-
-        // Description
-        TextFormField(
-          controller: companyDescController,
-          decoration: const InputDecoration(
-            labelText: 'Description *',
-            hintText: 'Décrivez brièvement votre activité',
-            border: OutlineInputBorder(),
-          ),
-          maxLines: 3,
-          validator: (value) {
-            if (!isCompany) return null;
-            if (value == null || value.trim().isEmpty) {
-              return "Veuillez entrer une description";
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 15),
-
-        // Site web
-        TextFormField(
-          controller: companyWebsiteController,
-          keyboardType: TextInputType.url,
-          decoration: const InputDecoration(
-            labelText: 'Site web (URL) *',
-            hintText: 'https://exemple.com',
-            border: OutlineInputBorder(),
-          ),
-          validator: (value) {
-            if (!isCompany) return null;
-            if (value == null || value.trim().isEmpty) {
-              return "Veuillez entrer l’URL du site";
-            }
-            final urlReg = RegExp(r'^(https?:\/\/)?([^\s.]+\.[^\s]{2,}|localhost)(\/\S*)?$');
-            if (!urlReg.hasMatch(value.trim())) {
-              return "URL invalide (ex: https://exemple.com)";
-            }
-            return null;
-          },
-        ),        
-      ],
-    );
-  }
-
 }

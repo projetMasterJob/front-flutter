@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher.dart';
 import 'log_in_screen.dart';
 import 'edit_profile.dart';
 import 'condition_utilisation.dart';
 import 'mention_legale.dart';
 import 'cv_management_screen.dart';
+import 'services/document_service.dart';
 
 class ProfilPage extends StatefulWidget {
-  const ProfilPage({Key? key}) : super(key: key);
+  const ProfilPage({super.key});
 
   @override
   _ProfilPageState createState() => _ProfilPageState();
@@ -26,7 +26,7 @@ class _ProfilPageState extends State<ProfilPage> {
     loadUserInfo();
   }
 
-  // Méthode pour récupérer les informations de l'utilisateur
+  // Load user information from local storage
   Future<void> loadUserInfo() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -49,7 +49,7 @@ class _ProfilPageState extends State<ProfilPage> {
     }
   }
 
-  // Méthode pour formater la date de création du compte
+  // Format "member since" date in French
   String formatDate(String dateString) {
     try {
       final date = DateTime.parse(dateString);
@@ -63,23 +63,23 @@ class _ProfilPageState extends State<ProfilPage> {
     }
   }
 
-  // Méthode pour se déconnecter avec une dialog, on supprime les SharedPreferences et on redirige vers la page de login
+  // Logout: confirm, clear storage, and navigate to login
   Future<void> logout() async {
     try {
       final shouldLogout = await showDialog<bool>(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Déconnexion'),
-            content: Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
+            title: const Text('Déconnexion'),
+            content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text('Annuler'),
+                child: const Text('Annuler'),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text('Déconnecter', style: TextStyle(color: Colors.red)),
+                child: const Text('Déconnecter', style: TextStyle(color: Colors.red)),
               ),
             ],
           );
@@ -106,27 +106,64 @@ class _ProfilPageState extends State<ProfilPage> {
     }
   }
 
-  // Méthode pour supprimer le compte
-  // on affiche une dialog de confirmation pour supprimer le compte
-  // ensuite on supprime le compte via l'API et on supprime les SharedPreferences et on redirige vers la page de login
+  // Delete account: also delete user's documents (DB + S3) via document-service
   Future<void> deleteAccount() async {
     try {
+      final TextEditingController confirmController = TextEditingController();
+      final requiredPhrase = 'supprimer définitivement';
+      bool canConfirm = false;
+
       final shouldDelete = await showDialog<bool>(
         context: context,
+        barrierDismissible: false,
         builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Supprimer mon compte'),
-            content: Text('Vos données seront définitivement perdues et vous serez redirigé vers la page de connexion. Cette action est irréversible.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text('Annuler'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text('OK', style: TextStyle(color: Colors.red)),
-              ),
-            ],
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                title: const Text('Supprimer mon compte'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Cette action est définitive. Toutes vos données (compte, candidatures, CV et fichiers associés) seront supprimées définitivement.',
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Pour confirmer, tapez exactement: \"$requiredPhrase\"',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: confirmController,
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        hintText: 'supprimer définitivement',
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (val) {
+                        setState(() {
+                          canConfirm = val.trim().toLowerCase() == requiredPhrase;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Annuler'),
+                  ),
+                  ElevatedButton(
+                    onPressed: canConfirm ? () => Navigator.of(context).pop(true) : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                    child: const Text('Supprimer mon compte'),
+                  ),
+                ],
+              );
+            },
           );
         },
       );
@@ -136,8 +173,16 @@ class _ProfilPageState extends State<ProfilPage> {
         final userId = prefs.getString('user_id');
         
         if (userId != null) {
+          // 1) Try to delete all user documents (CV and others) from document-service
+          try {
+            final docService = DocumentService();
+            await docService.deleteUserCv(userId);
+          } catch (_) {
+            // Non-blocking: continue even if there is no CV or the deletion fails
+          }
+
+          // 2) Delete the user from the main service
           final token = prefs.getString('token');
-          
           final response = await http.delete(
             Uri.parse('https://gestion-service.vercel.app/api/users/$userId'),
             headers: {
@@ -188,7 +233,7 @@ class _ProfilPageState extends State<ProfilPage> {
             Column(
               children: [
                 Container(
-                  color: Color(0xFF0084F7),
+                  color: const Color(0xFF0084F7),
                   height: 110,
                   width: double.infinity,
                 ),
@@ -197,7 +242,7 @@ class _ProfilPageState extends State<ProfilPage> {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(16),
                       bottomRight: Radius.circular(16),
                     ),
@@ -216,20 +261,20 @@ class _ProfilPageState extends State<ProfilPage> {
                         userInfo != null 
                             ? '${userInfo!['first_name']} ${userInfo!['last_name']}'
                             : '',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                       Text(
                         userInfo != null 
                             ? formatDate(userInfo!['created_at'])
                             : '',
-                        style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
                       ),
                       const SizedBox(height: 20),
                       Text(
                         userInfo != null && userInfo!['description'] != null
                             ? userInfo!['description']
                             : "",
-                        style: TextStyle(fontSize: 13),
+                        style: const TextStyle(fontSize: 13),
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -284,16 +329,16 @@ class _ProfilPageState extends State<ProfilPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Mes informations', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                          const Text('Mes informations', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                           GestureDetector(
                             onTap: () async {
                               await Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => EditProfilePage()),
+                                MaterialPageRoute(builder: (context) => const EditProfilePage()),
                               );
                               loadUserInfo();
                             },
-                            child: Text('Modifier', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 15)),
+                            child: const Text('Modifier', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 15)),
                           ),
                         ],
                       ),
@@ -301,19 +346,19 @@ class _ProfilPageState extends State<ProfilPage> {
                       const Text('Adresse', style: TextStyle(color: Colors.grey, fontSize: 13)),
                       Text(
                         userInfo != null ? userInfo!['address'] : '',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)
                       ),
                       const SizedBox(height: 10),
                       const Text('Téléphone', style: TextStyle(color: Colors.grey, fontSize: 13)),
                       Text(
                         userInfo != null ? userInfo!['phone'] : '',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)
                       ),
                       const SizedBox(height: 10),
                       const Text('Email', style: TextStyle(color: Colors.grey, fontSize: 13)),
                       Text(
                         userInfo != null ? userInfo!['email'] : '',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)
                       ),
                       const SizedBox(height: 10),
                       const Text('Mot de passe', style: TextStyle(color: Colors.grey, fontSize: 13)),
@@ -323,7 +368,7 @@ class _ProfilPageState extends State<ProfilPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                // Section Centre d'aide
+                // Help Center section
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 10),
                   padding: const EdgeInsets.all(16),
@@ -358,45 +403,15 @@ class _ProfilPageState extends State<ProfilPage> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      // InkWell(
-                      //   onTap: () async {
-                      //     final Uri uri = Uri(
-                      //       scheme: 'mailto',
-                      //       path: 'support@JobAzur.com',
-                      //       queryParameters: {'subject': 'Support JobAzur'},
-                      //     );
-                      //     if (await canLaunchUrl(uri)) {
-                      //       await launchUrl(uri);
-                      //     } else {
-                      //       ScaffoldMessenger.of(context).showSnackBar(
-                      //         SnackBar(content: Text('Impossible d\'ouvrir le client de messagerie. Veuillez l\'ouvrir manuellement.')),
-                      //       );
-                      //     }
-                      //   },
-                      //   child: Row(
-                      //     children: const [
-                      //       Icon(Icons.mail_outline, color: Colors.blue),
-                      //       SizedBox(width: 12),
-                      //       Expanded(
-                      //         child: Text('Contacter le support', style: TextStyle(color: Colors.blue, fontSize: 16)),
-                      //       ),
-                      //       Icon(Icons.chevron_right, color: Colors.grey),
-                      //     ],
-                      //   ),
-                      // ),
-                      // const Padding(
-                      //   padding: EdgeInsets.symmetric(vertical: 16.0),
-                      //   child: Divider(height: 1, color: Color(0xFFE0E0E0)),
-                      // ),
                       InkWell(
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => ConditionUtilisationPage()),
+                            MaterialPageRoute(builder: (context) => const ConditionUtilisationPage()),
                           );
                         },
-                        child: Row(
-                          children: const [
+                        child: const Row(
+                          children: [
                             Icon(Icons.description_outlined, color: Colors.blue),
                             SizedBox(width: 12),
                             Expanded(
@@ -414,11 +429,11 @@ class _ProfilPageState extends State<ProfilPage> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => MentionLegalePage()),
+                            MaterialPageRoute(builder: (context) => const MentionLegalePage()),
                           );
                         },
-                        child: Row(
-                          children: const [
+                        child: const Row(
+                          children: [
                             Icon(Icons.description_outlined, color: Colors.blue),
                             SizedBox(width: 12),
                             Expanded(
@@ -437,11 +452,11 @@ class _ProfilPageState extends State<ProfilPage> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Color(0xFFE0E0E0)),
+                    border: Border.all(color: const Color(0xFFE0E0E0)),
                   ),
                   child: ListTile(
-                    leading: Icon(Icons.logout, color: Colors.red),
-                    title: Text('Se déconnecter', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
+                    leading: const Icon(Icons.logout, color: Colors.red),
+                    title: const Text('Se déconnecter', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
                     onTap: logout,
                   ),
                 ),
@@ -451,11 +466,11 @@ class _ProfilPageState extends State<ProfilPage> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Color(0xFFE0E0E0)),
+                    border: Border.all(color: const Color(0xFFE0E0E0)),
                   ),
                   child: ListTile(
-                    leading: Icon(Icons.delete_outline, color: Colors.red),
-                    title: Text('Supprimer mon compte', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
+                    leading: const Icon(Icons.delete_outline, color: Colors.red),
+                    title: const Text('Supprimer mon compte', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
                     onTap: deleteAccount,
                   ),
                 ),
@@ -470,14 +485,14 @@ class _ProfilPageState extends State<ProfilPage> {
                 width: 110,
                 height: 110,
                 decoration: BoxDecoration(
-                  color: Color(0xFFE3F0FB),
+                  color: const Color(0xFFE3F0FB),
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 3),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.10),
                       blurRadius: 6,
-                      offset: Offset(0, 2),
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
@@ -486,7 +501,7 @@ class _ProfilPageState extends State<ProfilPage> {
                     userInfo != null 
                         ? '${userInfo!['first_name'][0]}${userInfo!['last_name'][0]}'
                         : '',
-                    style: TextStyle(fontSize: 40, color: Color(0xFF2196F3), fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 40, color: Color(0xFF2196F3), fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -501,9 +516,9 @@ class _ProfilPageState extends State<ProfilPage> {
                     color: Colors.green[400],
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
+                    children: [
                       Icon(Icons.check, color: Colors.white, size: 16),
                       SizedBox(width: 4),
                       Text('Vérifié', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),

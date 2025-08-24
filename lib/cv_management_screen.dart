@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:http/http.dart' as http;
 import 'services/document_service.dart';
 
 class CVManagementScreen extends StatefulWidget {
@@ -20,7 +19,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
   Map<String, dynamic>? _currentCV;
   bool _isLoading = false;
   bool _isUploading = false;
-  static const int _maxFileSizeBytes = 5 * 1024 * 1024; // 5 Mo
+  static const int _maxFileSizeBytes = 5 * 1024 * 1024; // 5 MB
 
   @override
   void initState() {
@@ -61,20 +60,14 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
 
       if (result != null) {
         File file = File(result.files.single.path!);
-        
-        // Debug: afficher les informations du fichier sélectionné
-        print('File selected: ${file.path}');
-        print('File exists: ${await file.exists()}');
         final int sizeBytes = await file.length();
-        print('File size: $sizeBytes bytes');
-        print('File extension: ${file.path.split('.').last.toLowerCase()}');
         
-        // Vérifier que c'est bien un PDF
+        // Validate PDF type
         if (file.path.split('.').last.toLowerCase() != 'pdf') {
           throw Exception('Seuls les fichiers PDF sont acceptés');
         }
 
-        // Vérifier la taille max 5 Mo (client-side)
+        // Enforce 5 MB limit (client-side)
         if (sizeBytes > _maxFileSizeBytes) {
           await _showTooLargeDialog(sizeBytes);
           return;
@@ -124,81 +117,42 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
       
       final String downloadUrl = await _documentService.getDocumentDownloadUrl(documentId);
       
-      // Debug: afficher l'URL de téléchargement
-      print('Download URL: $downloadUrl');
-      
-             // Essayer d'ouvrir l'URL directement avec différents modes
-       try {
-         // Essayer d'abord avec LaunchMode.externalApplication (plus fiable pour les PDFs)
-         try {
-           await launchUrl(
-             Uri.parse(downloadUrl),
-             mode: LaunchMode.externalApplication,
-           );
-           
-           ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(content: Text('CV ouvert dans l\'application par défaut!')),
-           );
-           return;
-         } catch (e2) {
-           print('External application failed: $e2');
-           
-           // Essayer avec LaunchMode.externalNonBrowserApplication
-           try {
-             await launchUrl(
-               Uri.parse(downloadUrl),
-               mode: LaunchMode.externalNonBrowserApplication,
-             );
-             
-             ScaffoldMessenger.of(context).showSnackBar(
-               const SnackBar(content: Text('CV ouvert dans l\'application par défaut!')),
-             );
-             return;
-           } catch (e3) {
-             print('ExternalNonBrowserApplication failed: $e3');
-             
-             // Essayer avec LaunchMode.inAppWebView
-             try {
-               await launchUrl(
-                 Uri.parse(downloadUrl),
-                 mode: LaunchMode.inAppWebView,
-               );
-               
-               ScaffoldMessenger.of(context).showSnackBar(
-                 const SnackBar(content: Text('CV ouvert dans l\'app!')),
-               );
-               return;
-             } catch (e4) {
-               print('InAppWebView failed: $e4');
-               
-               // Dernier essai avec LaunchMode.platformDefault
-               try {
-                 await launchUrl(
-                   Uri.parse(downloadUrl),
-                   mode: LaunchMode.platformDefault,
-                 );
-                 
-                 ScaffoldMessenger.of(context).showSnackBar(
-                   const SnackBar(content: Text('CV ouvert!')),
-                 );
-                 return;
-               } catch (e5) {
-                 print('Platform default failed: $e5');
-               }
-             }
-           }
-         }
-         
-         // Si aucun mode ne fonctionne
-         throw Exception('Impossible d\'ouvrir l\'URL de téléchargement');
-         
-       } catch (e2) {
-         print('URL launch failed: $e2');
-         throw Exception('Erreur lors de l\'ouverture du CV: $e2');
-       }
+      // Try opening the URL using different modes for better PDF handling
+      try {
+        // Prefer external application (more reliable for PDFs)
+        try {
+          await launchUrl(
+            Uri.parse(downloadUrl),
+            mode: LaunchMode.externalApplication,
+          );
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('CV ouvert dans l\'application par défaut!')),
+          );
+          return;
+        } catch (e2) {
+          // Fallback to non-browser external application
+          try {
+            await launchUrl(
+              Uri.parse(downloadUrl),
+              mode: LaunchMode.externalNonBrowserApplication,
+            );
+            
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('CV ouvert dans l\'application par défaut!')),
+            );
+            return;
+          } catch (e3) {}
+        }
+        
+        // If none works, propagate an error
+        throw Exception('Impossible d\'ouvrir l\'URL de téléchargement');
+        
+      } catch (e2) {
+        throw Exception('Erreur lors de l\'ouverture du CV: $e2');
+      }
       
     } catch (e) {
-      print('Download error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erreur lors du téléchargement: $e')),
       );
@@ -418,7 +372,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
   String _safeTitle(dynamic value, {String fallback = ''}) {
     if (value == null) return fallback;
     if (value is String) return value;
-    // Gestion des objets de type Buffer renvoyés éventuellement par le back
+    // Handle Buffer-like objects possibly returned by the backend
     if (value is Map && value['type'] == 'Buffer') return fallback;
     return value.toString();
   }
@@ -429,7 +383,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Fichier trop volumineux'),
-        content: Text('Votre fichier ${sizeMo.isNotEmpty ? '(${sizeMo} Mo) ' : ''}est trop lourd. La taille maximale autorisée est de 5 Mo.'),
+        content: Text('Votre fichier ${sizeMo.isNotEmpty ? '($sizeMo Mo) ' : ''}est trop lourd. La taille maximale autorisée est de 5 Mo.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

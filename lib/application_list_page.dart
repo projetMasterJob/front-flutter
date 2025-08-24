@@ -1,6 +1,9 @@
 // applications_list_page.dart
 import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'dart:io' show Platform;
+import 'package:url_launcher/url_launcher.dart';
+import 'services/document_service.dart';
 
 import 'services/company_service.dart';
 import 'models/application.dart';
@@ -19,6 +22,7 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
   final _service = CompanyService();
   final _controller = ScrollController();
   String? _companyUserId;
+  late final DocumentService _docService;
 
   final _items = <Application>[];
   final _processing = <String>{};
@@ -28,6 +32,8 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
   bool _loadingMore = false;
   bool _hasMore = true;
   String? _error;
+  // Cache: présence de CV par userId (true/false). Absent => inconnu, on affiche le bouton.
+  final Map<String, bool> _userHasCv = {};
 
   @override
   void initState() {
@@ -35,6 +41,9 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
     _loadFirst();
     _controller.addListener(_onScroll);
     _loadCompanyUserId();
+    // Utilise par défaut le service déployé pour éviter les timeouts locaux.
+    const remote = 'https://document-service-one.vercel.app';
+    _docService = DocumentService(baseUrl: remote);
   }
 
   @override
@@ -58,6 +67,7 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
         _items.addAll(pageItems);
         _hasMore = pageItems.length == _limit;
       });
+      // Pas de pré-vérification CV: on déterminera lors du clic, et on cache ensuite si 404.
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -194,6 +204,8 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
             final jobTitle = (a as dynamic)?.jobTitle as String?;   // peut être null pour l’instant
             final cvUrl    = (a as dynamic)?.cvUrl as String?;      // idem
 
+            // Par défaut: on affiche le bouton CV (optimiste). Si on a déjà constaté 404, on le cache.
+            final hasCv = _userHasCv.containsKey(a.userId) ? _userHasCv[a.userId]! : true;
             return _ApplicationCard(
               key: ValueKey<String>(a.id),
               name: name,
@@ -204,14 +216,43 @@ class _ApplicationListPageState extends State<ApplicationListPage> {
               statusColor: color,
               jobTitle: jobTitle ?? 'Intitulé du poste',
               description: a.description ?? '',
-              onTapCv: () {
-                // TODO: télécharge/ou ouvre le CV (brancher ton action)
-                if ((a.cvUrl).isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('CV non disponible')));
-                  return;
-                }
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Télécharger le CV (à brancher)')));
-              },
+              onTapCv: hasCv
+                  ? () async {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (_) => const Center(child: CircularProgressIndicator()),
+                      );
+                      try {
+                        final url = await _docService.getCvDownloadUrl(a.userId);
+                        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                      } catch (e) {
+                        final msg = e.toString();
+                        if (msg.contains('404')) {
+                          setState(() {
+                            _userHasCv[a.userId] = false; // cache: plus de bouton à l’avenir
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('CV non fourni')),
+                          );
+                        } else if (msg.contains('401') || msg.contains('403')) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Accès non autorisé au CV')),
+                          );
+                        } else if (msg.toLowerCase().contains('timeout')) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Le service document est indisponible')),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Impossible d\'ouvrir le CV : $e')),
+                          );
+                        }
+                      } finally {
+                        if (mounted) Navigator.pop(context);
+                      }
+                    }
+                  : null,
               onAccept: _isProcessing(a) || a.status.toLowerCase() == 'accepted'
                   ? null
                   : () => _changeStatus(a, 'accepted'),
@@ -394,13 +435,23 @@ class _ApplicationCardState extends State<_ApplicationCard> {
                 tooltip: 'Message',
               ),
               const SizedBox(width: 8),
-              _ActionPillButton(
-                icon: Icons.file_download_outlined,
-                label: 'CV',
-                bg: cvDisabled ? Colors.grey[300]! : const Color(0xFF1A73E8),
-                fg: cvDisabled ? Colors.black54 : Colors.white,
-                onTap: widget.onTapCv,
-              ),
+              if (widget.onTapCv != null)
+                _ActionPillButton(
+                  icon: Icons.file_download_outlined,
+                  label: 'CV',
+                  bg: const Color(0xFF1A73E8),
+                  fg: Colors.white,
+                  onTap: widget.onTapCv,
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text('CV non fourni', style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w600)),
+                ),
               const SizedBox(width: 8),
               _ActionPillButton(
                 icon: Icons.check,
