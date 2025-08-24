@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:front_flutter/sign_in_screen.dart';
-import 'package:front_flutter/dashboard_pro.dart';
-import 'home_tab.dart';
+// import 'home_tab.dart';
 import 'template.dart';
+import 'dashboard_pro.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 class LogInScreen extends StatefulWidget {
+  const LogInScreen({super.key});
   @override
   _LogInScreenState createState() => _LogInScreenState();
 }
@@ -19,7 +20,6 @@ class _LogInScreenState extends State<LogInScreen> {
   final TextEditingController passwordController = TextEditingController();
   
   bool _isLoading = false;
-  bool _isPasswordVisible = false;
   String? loginError;
 
   Future<void> loginUser(String email, String password) async {
@@ -42,21 +42,16 @@ class _LogInScreenState extends State<LogInScreen> {
         if (accessToken != null) {
           try {
             final decodedToken = JwtDecoder.decode(accessToken);
-            print(decodedToken);
             await _saveUserData(accessToken, decodedToken);
             await getUserLoginInfos(decodedToken['id'].toString());
 
             final role = decodedToken['role']?.toString().toLowerCase();
-
-            if(role == "pro")
-            {
+            if (role == 'pro') {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => CompanyDashboardPage()),
+                MaterialPageRoute(builder: (context) => const CompanyDashboardPage()),
               );
-            }
-            else
-            {
+            } else {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => TemplatePage(selectedIndex: 0)),
@@ -133,23 +128,23 @@ class _LogInScreenState extends State<LogInScreen> {
   @override
   Widget build (BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 247, 247, 247),
+      backgroundColor: const Color.fromARGB(255, 247, 247, 247),
       body: SafeArea(
         child: Column(
           children: [
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             Center(
               child: Column(
                 children: [
                   Image.asset(
                     './assets/images/logo.png',
-                    height: 200,
+                    height: 250,
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                 ],
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -160,7 +155,7 @@ class _LogInScreenState extends State<LogInScreen> {
                   children: [
                     TextFormField(
                       controller: emailController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Adresse mail *',
                         hintText: 'votre adresse mail',
                         border: OutlineInputBorder(),
@@ -175,24 +170,15 @@ class _LogInScreenState extends State<LogInScreen> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     TextFormField(
                       controller: passwordController,
-                      obscureText: !_isPasswordVisible,
-                      decoration: InputDecoration(
+                      obscureText: true,
+                      decoration: const InputDecoration(
                         labelText: 'Mot de passe *',
                         hintText: 'votre mot de passe',
                         border: OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _isPasswordVisible = !_isPasswordVisible;
-                            });
-                          },
-                        ),
+                        suffixIcon: Icon(Icons.visibility),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -210,11 +196,11 @@ class _LogInScreenState extends State<LogInScreen> {
                 padding: const EdgeInsets.only(top: 12.0),
                 child: Text(
                   loginError!,
-                  style: TextStyle(color: Colors.red, fontSize: 16),
+                  style: const TextStyle(color: Colors.red, fontSize: 16),
                 ),
               ),
 
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Bouton connexion
             ElevatedButton(
@@ -228,18 +214,18 @@ class _LogInScreenState extends State<LogInScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(
+              child: const Text(
                 "Connexion",
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),
 
-            SizedBox(height: 100),
+            const SizedBox(height: 24),
 
             // Bouton inscription
             ElevatedButton(
@@ -252,18 +238,18 @@ class _LogInScreenState extends State<LogInScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(
+              child: const Text(
                 "Inscription",
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),
 
-            Spacer(),
+            const Spacer(),
             if (_isLoading)
             Container(
               color: Colors.black.withOpacity(0.5),

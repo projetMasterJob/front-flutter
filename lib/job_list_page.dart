@@ -162,7 +162,6 @@ class _JobsListPageState extends State<JobsListPage> {
 
 class _JobCard extends StatefulWidget {
   const _JobCard({
-    super.key,
     required this.title,
     required this.description,
     required this.bottomLine,

@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'models/company_dashboard_data.dart';
 import 'services/company_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:timeago/timeago.dart' as timeago;
 import 'job_list_page.dart';
 import 'application_list_page.dart';
@@ -36,7 +32,7 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final api = CompanyService();
+    // final api = CompanyService();
 
     return FutureBuilder<CompanyDashboardData>(
       future: _future,

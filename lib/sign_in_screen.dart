@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'log_in_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   @override
@@ -83,7 +84,7 @@ class _SignInScreenState extends State<SignInScreen> {
       );
 
       if (response.statusCode == 201) {
-        final data = jsonDecode(response.body);
+        // final data = jsonDecode(response.body);
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -99,6 +100,12 @@ class _SignInScreenState extends State<SignInScreen> {
             ],
           ),
         );
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LogInScreen()),
+            (route) => false,
+          );
+        }
       } else {
         print('Erreur lors de l\'inscription : ${response.body}');
         setState(() {
@@ -117,6 +124,15 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5FCF9),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+          tooltip: 'Retour',
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
