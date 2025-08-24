@@ -57,13 +57,13 @@ class PrivacyPolicyPage extends StatelessWidget {
               const SizedBox(height: 14),
               const _SectionTitle('4. Stockage et sécurité (AWS S3, chiffrement)'),
               const _SectionText(
-                "Les documents (ex: CV) sont stockés de manière sécurisée sur AWS S3. Les données sensibles côté application peuvent être chiffrées et pseudonymisées. L'accès aux documents est strictement contrôlé (propriétaire, administrateur, ou recruteur autorisé lorsqu'une candidature existe).",
+                "Nous utilisons AWS (Amazon Web Services) en tant que sous-traitant pour le stockage des documents (ex.: CV) via le service S3. Les fichiers sont actuellement hébergés dans l'Union Européenne (région eu-west-3 / Paris). Les accès sont strictement contrôlés (propriétaire, administrateur, ou recruteur autorisé lorsqu'une candidature existe). Les fichiers sont servis via des URL signées à durée limitée et protégés par des contrôles d'autorisation. Les données sont chiffrées au repos (ex.: SSE-S3/SSE-KMS) et en transit (TLS).",
               ),
 
               const SizedBox(height: 14),
               const _SectionTitle('5. Durée de conservation et suppression'),
               const _SectionText(
-                "Nous conservons vos données uniquement le temps nécessaire à la fourniture du service et au respect de la loi. Si vous supprimez votre compte, nous supprimons vos données et documents associés (y compris les fichiers S3) de manière définitive, sauf obligation légale contraire.",
+                "Nous conservons vos données uniquement pendant la durée nécessaire à la fourniture du service et au respect de nos obligations légales. En cas de suppression de compte, nous supprimons les données et documents associés (y compris les fichiers sur S3). Les ressources sont supprimées sans délai inutile et les éventuelles sauvegardes techniques résiduelles sont purgées dans un délai raisonnable.",
               ),
 
               const SizedBox(height: 14),

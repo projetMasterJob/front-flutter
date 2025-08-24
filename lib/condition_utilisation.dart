@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 
 class ConditionUtilisationPage extends StatelessWidget {
-  const ConditionUtilisationPage({Key? key}) : super(key: key);
+  const ConditionUtilisationPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Conditions d\'utilisation'),
-        backgroundColor: Color(0xFF0084F7),
+        title: const Text('Conditions d\'utilisation'),
+        backgroundColor: const Color(0xFF0084F7),
         foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Conditions d\'utilisation',
               style: TextStyle(
                 fontSize: 24,
@@ -25,7 +25,7 @@ class ConditionUtilisationPage extends StatelessWidget {
                 color: Color(0xFF0084F7),
               ),
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
               'Dernière mise à jour : 15 janvier 2025',
               style: TextStyle(
@@ -33,7 +33,7 @@ class ConditionUtilisationPage extends StatelessWidget {
                 color: Colors.grey[600],
               ),
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             
             _buildSection(
               '1. Acceptation des conditions',
@@ -62,7 +62,7 @@ class ConditionUtilisationPage extends StatelessWidget {
             
             _buildSection(
               '6. Protection de la vie privée',
-              'Vos données personnelles sont collectées et traitées conformément à notre politique de confidentialité. Nous nous engageons à protéger vos informations personnelles.',
+              'Vos données personnelles sont collectées et traitées conformément à notre politique de confidentialité. Nous utilisons notamment AWS (Amazon Web Services) comme sous-traitant pour l\'hébergement sécurisé de certains fichiers (ex.: CV). Pour en savoir plus (région, sécurité, durée de conservation et droits), consultez la Politique de confidentialité.',
             ),
             
             _buildSection(
@@ -75,14 +75,9 @@ class ConditionUtilisationPage extends StatelessWidget {
               'Nous nous réservons le droit de modifier ces conditions à tout moment. Les modifications prendront effet immédiatement après leur publication. Votre utilisation continue du service constitue votre acceptation des nouvelles conditions.',
             ),
             
-            _buildSection(
-              '9. Contact',
-              'Pour toute question concernant ces conditions d\'utilisation, vous pouvez nous contacter à l\'adresse suivante : support@JobAzur.com',
-            ),
-            
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             Container(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.blue[50],
                 borderRadius: BorderRadius.circular(8),
@@ -106,22 +101,22 @@ class ConditionUtilisationPage extends StatelessWidget {
 
   Widget _buildSection(String title, String content) {
     return Container(
-      margin: EdgeInsets.only(bottom: 24),
+      margin: const EdgeInsets.only(bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             content,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               color: Colors.black54,
               height: 1.5,

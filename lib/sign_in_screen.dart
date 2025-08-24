@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'log_in_screen.dart';
+import 'condition_utilisation.dart';
 
 class SignInScreen extends StatefulWidget {
   @override
@@ -341,6 +343,29 @@ class _SignInScreenState extends State<SignInScreen> {
                 child: Text(
                   "Inscription",
                   style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  children: [
+                    const TextSpan(text: "En vous inscrivant, vous acceptez les "),
+                    TextSpan(
+                      text: "Conditions d'utilisation",
+                      style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const ConditionUtilisationPage()),
+                          );
+                        },
+                    ),
+                    const TextSpan(text: " de Jobazur"),
+                  ],
                 ),
               ),
             ),
