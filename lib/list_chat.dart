@@ -43,12 +43,21 @@ class _ListChatState extends State<ListChat> {
     final id = prefs.getString('user_id') ??
         prefs.getString('userId') ??
         prefs.getString('idUser');
-    setState(() => _userId = id);
+
+    setState(() {
+      _userId = id;
+    });
 
     if (id != null && id.isNotEmpty) {
-      setState(() => _future = _fetchChats(id));
+      final f = _fetchChats(id); // prépare le Future
+      setState(() {
+        _future = f;
+      }); // ← NE renvoie rien
     } else {
-      setState(() => _future = Future.value(const <Map<String, dynamic>>[]));
+      final f = Future.value(const <Map<String, dynamic>>[]);
+      setState(() {
+        _future = f;
+      }); // ← idem
     }
   }
 
@@ -117,8 +126,11 @@ class _ListChatState extends State<ListChat> {
 
   Future<void> _refresh() async {
     if ((_userId ?? '').isEmpty) return;
-    setState(() => _future = _fetchChats(_userId!));
-    await _future;
+    final f = _fetchChats(_userId!); // prépare le Future
+    setState(() {
+      _future = f;
+    }); // ← callback synchrone, retourne void
+    await f; // si tu veux attendre la fin du chargement
   }
 
   void _toggleEdit() {
@@ -210,7 +222,8 @@ class _ListChatState extends State<ListChat> {
               : TextButton(
                   onPressed: _toggleEdit,
                   child: const Text('Modifier',
-                      style: TextStyle(fontWeight: FontWeight.w600, color: Colors.blue)),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600, color: Colors.blue)),
                 ),
         ),
       ),
@@ -313,7 +326,9 @@ class _ListChatState extends State<ListChat> {
                               'name'
                             ]) ??
                             'Conversation';
-                        final handle = displayName.isNotEmpty ? '@${displayName.toLowerCase().replaceAll(RegExp(r"[^a-z0-9]"), "")}': '';
+                        final handle = displayName.isNotEmpty
+                            ? '@${displayName.toLowerCase().replaceAll(RegExp(r"[^a-z0-9]"), "")}'
+                            : '';
                         final imageUrl = company?.imageUrl;
 
                         return _ConversationRow(
@@ -344,7 +359,7 @@ class _ListChatState extends State<ListChat> {
                                   chatId: chatId,
                                   userId: _userId!,
                                   companyName: displayName,
-                                  companyHandle: handle, 
+                                  companyHandle: handle,
                                 ),
                               ),
                             );
