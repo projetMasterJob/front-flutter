@@ -28,10 +28,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
 
   GoogleMapController? _mapController;
   LatLng? _currentLocation;
-  bool _locationPermissionGranted = false;
-  bool _serviceEnabled = true;
   bool hasCenteredOnce = false;
-  bool _isLoading = true;
   Set<Marker> _markers = {};
   List<Point> _points = [];
   double _mapRotation = 0.0;
@@ -91,16 +88,8 @@ class _HomeMapPageState extends State<HomeMapPage> {
   }
 
   Future<void> _initializeLocation() async {
-    setState(() {
-      _isLoading = true;
-    });
     bool permissionGranted = await LocationService.checkAndRequestPermission();
     if (!permissionGranted) {
-      setState(() {
-        _locationPermissionGranted = false;
-        _serviceEnabled = true;
-        _isLoading = false;
-      });
       _loadDefaultMarkers();
       return;
     }
@@ -110,9 +99,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
       setState(() {
         _currentLocation = position;
         _originalLocation = position;
-        _locationPermissionGranted = true;
-        _serviceEnabled = true;
-        _isLoading = false;
       });
       if (_mapController != null) {
         _loadMarkersFromApi(
@@ -122,11 +108,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
         );
       }
     } catch (e) {
-      setState(() {
-        _serviceEnabled = false;
-        _locationPermissionGranted = true;
-        _isLoading = false;
-      });
       _loadDefaultMarkers();
     }
   }
@@ -138,7 +119,6 @@ class _HomeMapPageState extends State<HomeMapPage> {
     setState(() {
       _currentLocation = const LatLng(defaultLat, defaultLng);
       _originalLocation = const LatLng(defaultLat, defaultLng);
-      _isLoading = false;
     });
     
     await _loadMarkersFromApi(
@@ -219,20 +199,17 @@ class _HomeMapPageState extends State<HomeMapPage> {
         setState(() {
           _markers = markers;
           _points = points;
-          _isLoading = false;
         });
       } else {
         setState(() {
           _markers = {};
           _points = [];
-          _isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
         _markers = {};
         _points = [];
-        _isLoading = false;
       });
     }
   }
@@ -600,16 +577,43 @@ class _HomeMapPageState extends State<HomeMapPage> {
     );
   }
 
-  Future<void> _openLocationSettings() async {
-    await LocationService.openLocationSettings();
-  }
 
-  Future<void> _openAppSettings() async {
-    await LocationService.openAppSettings();
-  }
-
-  Future<void> _requestLocationPermission() async {
-    // Demander la permission de localisation
+  Future<void> _centerOnUserLocation() async {
+    // Vérifier si la localisation est disponible
+    bool serviceEnabled = await LocationService.isLocationServiceEnabled();
+    
+    if (!serviceEnabled) {
+      // Proposer d'activer la localisation
+      bool? shouldEnableLocation = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Localisation désactivée'),
+            content: const Text(
+              'La localisation est désactivée sur votre appareil. '
+              'Voulez-vous l\'activer pour utiliser cette fonctionnalité ?'
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Annuler'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Activer'),
+              ),
+            ],
+          );
+        },
+      );
+      
+      if (shouldEnableLocation == true) {
+        await LocationService.openLocationSettings();
+      }
+      return;
+    }
+    
+    // Vérifier les permissions
     bool permissionGranted = await LocationService.checkAndRequestPermission();
     
     if (!permissionGranted) {
@@ -643,9 +647,61 @@ class _HomeMapPageState extends State<HomeMapPage> {
       return;
     }
     
-    // Si la permission est accordée, réinitialiser la localisation
-    await _initializeLocation();
+    // Si tout est OK, obtenir la position et centrer
+    try {
+      final position = await LocationService.getCurrentLocation()
+          .timeout(const Duration(seconds: 10));
+      
+      setState(() {
+        _currentLocation = position;
+        _originalLocation = position;
+      });
+      
+      if (_mapController != null) {
+        _mapController!.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: position,
+              zoom: 17.0,
+            ),
+          ),
+        );
+        setState(() {
+          _isCenteredOnUser = true;
+          _showSearchHereButton = false;
+        });
+      }
+    } catch (e) {
+      // En cas d'erreur, proposer d'activer la localisation
+      bool? shouldEnableLocation = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Localisation indisponible'),
+            content: const Text(
+              'Impossible d\'obtenir votre position. '
+              'Voulez-vous vérifier les paramètres de localisation ?'
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Annuler'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Paramètres'),
+              ),
+            ],
+          );
+        },
+      );
+      
+      if (shouldEnableLocation == true) {
+        await LocationService.openLocationSettings();
+      }
+    }
   }
+
 
   Future<void> _openMapsNavigation(Point point) async {
     final url = 'https://www.google.com/maps/dir/?api=1&destination=${point.latitude},${point.longitude}';
@@ -823,23 +879,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                    right: 12,
                    child: GestureDetector(
                      onTap: () async {
-                       if (_currentLocation != null && _mapController != null) {
-                         _mapController!.animateCamera(
-                           CameraUpdate.newCameraPosition(
-                             CameraPosition(
-                               target: _currentLocation!,
-                               zoom: 17.0,
-                             ),
-                           ),
-                         );
-                         setState(() {
-                           _isCenteredOnUser = true;
-                           _originalLocation = _currentLocation;
-                           _showSearchHereButton = false;
-                         });
-                       } else {
-                         await _requestLocationPermission();
-                       }
+                       await _centerOnUserLocation();
                      },
                     child: Container(
                       decoration: BoxDecoration(

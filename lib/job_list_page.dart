@@ -99,6 +99,42 @@ class _JobsListPageState extends State<JobsListPage> {
     }
   }
 
+
+  Future<void> _deleteJob(Job job) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Supprimer l\'offre'),
+        content: Text('Êtes-vous sûr de vouloir supprimer l\'offre "${job.title}" ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await _service.deleteJob(job.id);
+        Navigator.pop(context, true); // Retourner au dashboard avec actualisation
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Offre supprimée avec succès')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur lors de la suppression: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_initialLoading) {
@@ -152,6 +188,7 @@ class _JobsListPageState extends State<JobsListPage> {
               description: desc,
               bottomLine: "$type • $when",
               badgeLabel: salary.isEmpty ? '—' : salary + ' €',
+              onDelete: () => _deleteJob(j),
             );
           },
         ),
@@ -166,7 +203,6 @@ class _JobCard extends StatefulWidget {
     required this.description,
     required this.bottomLine,
     required this.badgeLabel,
-    this.onEdit,
     this.onDelete,
   });
 
@@ -174,7 +210,6 @@ class _JobCard extends StatefulWidget {
   final String description;
   final String bottomLine; // ex: "CDI • il y a 2 j"
   final String badgeLabel; // ex: "2200 €"
-  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
   @override
@@ -250,12 +285,10 @@ class _JobCardState extends State<_JobCard> with TickerProviderStateMixin {
 
           const SizedBox(height: 12),
 
-          // Boutons action
+          // Bouton action
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              _PillButton(icon: Icons.edit, label: 'Modifier', bg: const Color(0xFF1A73E8), fg: Colors.white, onTap: widget.onEdit),
-              const SizedBox(width: 8),
               _PillButton(icon: Icons.delete_outline, label: 'Supprimer', bg: const Color(0xFFE53935), fg: Colors.white, onTap: widget.onDelete),
             ],
           ),

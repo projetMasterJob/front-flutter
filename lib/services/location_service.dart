@@ -54,6 +54,10 @@ class LocationService {
     return earthRadius * c;
   }
 
+  static Future<bool> isLocationServiceEnabled() async {
+    return await _location.serviceEnabled();
+  }
+
   static Future<void> openLocationSettings() async {
     await _location.requestService();
   }

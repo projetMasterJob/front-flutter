@@ -3,7 +3,6 @@ import 'models/company_dashboard_data.dart';
 import 'services/company_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'job_list_page.dart';
-import 'application_list_page.dart';
 import 'new_job_page.dart';
 import 'package:intl/intl.dart';
 
@@ -22,6 +21,13 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
     super.initState();
     _service = CompanyService();
     _future = _service.fetchDashboardForCurrentUser(); // une seule fois
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Recharger les données à chaque fois que la page apparaît
+    _reload();
   }
 
   Future<void> _reload() async {
@@ -176,27 +182,6 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
                           .toList(),
                       ),
 
-                      const SizedBox(height: 10),
-
-                      // Section Candidatures reçues
-                      _buildApplicationsSection(
-                        data.applications
-                          .map((a) => {
-                            'name': a.fullName,
-                            'job' : '—',
-                            'date': timeago.format(a.appliedAt.toLocal(), locale: 'fr_short'),
-                            'status': a.statusLabel,
-                          })
-                          .toList(),
-                          onSeeAll: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ApplicationListPage(companyId: c.id), // ⬅️ pas de `const`
-                              ),
-                            );
-                          },
-                      ),
 
                       const SizedBox(height: 20),
                     ],
@@ -312,12 +297,11 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
     }
 
     String _trailing(Map<String, dynamic> job) {
-      if (job.containsKey('applications_count')) return "${job['applications_count']} cand.";
       if (job['salary'] != null && job['salary'].toString().isNotEmpty) {
-        return job['salary'].toString();
+        return job['salary'].toString() + "€";
       }
       return '';
-      }
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -326,8 +310,11 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader("Emplois publiés", "Voir tout", () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const JobsListPage()));
+          _sectionHeader("Emplois publiés", "Voir tout", () async {
+            final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const JobsListPage()));
+            if (result == true) {
+              _reload(); // Recharger les données si une modification a eu lieu
+            }
           }),
           const SizedBox(height: 12),
           if (jobs.isEmpty)
@@ -362,87 +349,6 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
     );
   }
 
-  Widget _buildApplicationsSection(List<Map<String, dynamic>> applications, {
-      required VoidCallback onSeeAll, // ⬅️ nouveau
-  }) 
-  {
-    Color _statusColor(String s) {
-      switch (s.toLowerCase()) {
-        case 'à étudier':
-        case 'a etudier':
-        case 'pending':
-          return Colors.amber;
-        case 'acceptée':
-        case 'acceptee':
-        case 'accepted':
-          return Colors.green;
-        case 'refusée':
-        case 'refusee':
-        case 'rejected':
-          return Colors.red;
-        default:
-          return Colors.grey;
-      }
-    }
-
-    String _safeStr(dynamic v, [String fallback = '—']) {
-      final s = v?.toString().trim() ?? '';
-      return s.isEmpty ? fallback : s;
-    }
-
-    String _initial(String name) {
-      final s = name.trim();
-      return s.isEmpty ? '?' : s.characters.first.toUpperCase();
-    }
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10),
-      padding: const EdgeInsets.all(10),
-      decoration: _whiteBoxDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionHeader("Candidatures reçues", "Voir tout", onSeeAll),
-          const SizedBox(height: 12),
-          if (applications.isEmpty)
-            const Text("Aucune candidature")
-          else
-            Column(
-              children: applications.map((app) {
-                final name   = _safeStr(app['name'], 'Inconnu');
-                final date   = _safeStr(app['date']);
-                final status = _safeStr(app['status'], 'À étudier');
-
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.grey[200],
-                    child: Text(_initial(name)),
-                  ),
-                  title: Text(name),
-                  subtitle: Text("$date"),
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _statusColor(status).withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      status,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: _statusColor(status),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-        ],
-      ),
-    );
-  }
 
 
   // ===== MÉTHODES UTILITAIRES =====
