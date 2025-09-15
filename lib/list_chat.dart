@@ -378,6 +378,7 @@ class _ListChatState extends State<ListChat> {
                                       userId: _userId!,
                                       companyName: displayName,
                                       companyHandle: handle,
+                                      companyId: companyId,
                                     ),
                                   ),
                                 );

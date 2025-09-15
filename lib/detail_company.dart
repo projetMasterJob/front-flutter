@@ -337,6 +337,7 @@ class _DetailCompanyPageState extends State<DetailCompanyPage> {
                                             builder: (context) => ChatDetail(
                                               chatId: chatId,
                                               userId: userId,
+                                              companyId: widget.companyId,
                                             ),
                                           ),
                                         );

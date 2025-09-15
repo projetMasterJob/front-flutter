@@ -609,6 +609,7 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                                            builder: (context) => ChatDetail(
                                                              chatId: createdChatId,
                                                              userId: userId,
+                                                             companyId: companyId,
                                                            ),
                                                          ),
                                                        );
@@ -629,6 +630,7 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                                            builder: (context) => ChatDetail(
                                                              chatId: createdChatId,
                                                              userId: userId,
+                                                             companyId: companyId,
                                                            ),
                                                          ),
                                                        );

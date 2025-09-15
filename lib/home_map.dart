@@ -608,6 +608,45 @@ class _HomeMapPageState extends State<HomeMapPage> {
     await LocationService.openAppSettings();
   }
 
+  Future<void> _requestLocationPermission() async {
+    // Demander la permission de localisation
+    bool permissionGranted = await LocationService.checkAndRequestPermission();
+    
+    if (!permissionGranted) {
+      // Proposer d'aller dans les paramètres de l'app
+      bool? shouldOpenSettings = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Permission de localisation requise'),
+            content: const Text(
+              'Cette fonctionnalité nécessite l\'accès à votre localisation. '
+              'Voulez-vous activer la localisation dans les paramètres de l\'application ?'
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Annuler'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Paramètres'),
+              ),
+            ],
+          );
+        },
+      );
+      
+      if (shouldOpenSettings == true) {
+        await LocationService.openAppSettings();
+      }
+      return;
+    }
+    
+    // Si la permission est accordée, réinitialiser la localisation
+    await _initializeLocation();
+  }
+
   Future<void> _openMapsNavigation(Point point) async {
     final url = 'https://www.google.com/maps/dir/?api=1&destination=${point.latitude},${point.longitude}';
     
@@ -783,7 +822,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                    bottom: 102,
                    right: 12,
                    child: GestureDetector(
-                     onTap: () {
+                     onTap: () async {
                        if (_currentLocation != null && _mapController != null) {
                          _mapController!.animateCamera(
                            CameraUpdate.newCameraPosition(
@@ -799,7 +838,7 @@ class _HomeMapPageState extends State<HomeMapPage> {
                            _showSearchHereButton = false;
                          });
                        } else {
-                         _initializeLocation();
+                         await _requestLocationPermission();
                        }
                      },
                     child: Container(
@@ -811,9 +850,9 @@ class _HomeMapPageState extends State<HomeMapPage> {
                       padding: const EdgeInsets.all(10),
                       child: Center(
                         child: Icon(
-                          Icons.my_location,
+                          _currentLocation != null ? Icons.my_location : Icons.location_disabled,
                           size: 18,
-                          color: Colors.grey[600],
+                          color: _currentLocation != null ? Colors.blue[600] : Colors.grey[600],
                         ),
                       ),
                     ),

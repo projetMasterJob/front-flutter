@@ -24,11 +24,60 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
 
   String _extractErrorMessage(dynamic error) {
     final errorString = error.toString();
+    
     try {
       final Map<String, dynamic> errorMap = json.decode(errorString);
-      return errorMap['message'] ?? errorMap['error'] ?? 'Erreur inconnue';
+      
+      // Chercher différents champs possibles pour le message
+      if (errorMap['message'] != null) {
+        return errorMap['message'].toString();
+      }
+      if (errorMap['error'] != null) {
+        return errorMap['error'].toString();
+      }
+      if (errorMap['detail'] != null) {
+        return errorMap['detail'].toString();
+      }
+      if (errorMap['msg'] != null) {
+        return errorMap['msg'].toString();
+      }
+      
+      // Si c'est un objet avec des données, essayer de trouver un message utile
+      if (errorMap.isNotEmpty) {
+        final firstValue = errorMap.values.first;
+        if (firstValue is String && firstValue.isNotEmpty) {
+          return firstValue;
+        }
+      }
+      
+      return 'Erreur inconnue';
     } catch (_) {
-      return errorString;
+      // Si ce n'est pas du JSON valide, nettoyer le message
+      String cleanMessage = errorString;
+      
+      // Supprimer les préfixes d'erreur courants
+      cleanMessage = cleanMessage.replaceAll(RegExp(r'^Exception:\s*'), '');
+      cleanMessage = cleanMessage.replaceAll(RegExp(r'^Error:\s*'), '');
+      cleanMessage = cleanMessage.replaceAll(RegExp(r'^HttpException:\s*'), '');
+      
+      // Si le message contient encore du JSON brut, essayer d'extraire le message
+      if (cleanMessage.contains('{') && cleanMessage.contains('}')) {
+        try {
+          final match = RegExp(r'"message":\s*"([^"]+)"').firstMatch(cleanMessage);
+          if (match != null) {
+            return match.group(1) ?? cleanMessage;
+          }
+          
+          final match2 = RegExp(r'"error":\s*"([^"]+)"').firstMatch(cleanMessage);
+          if (match2 != null) {
+            return match2.group(1) ?? cleanMessage;
+          }
+        } catch (_) {
+          // Ignorer les erreurs de regex
+        }
+      }
+      
+      return cleanMessage.isEmpty ? 'Erreur inconnue' : cleanMessage;
     }
   }
 
@@ -120,7 +169,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
         await _showTooLargeDialog(null);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de l\'upload: ${_extractErrorMessage(e)}')),
+          SnackBar(content: Text('Un CV est déjà rattaché à votre profil. Supprimez le et réessayez.')),
         );
       }
     }

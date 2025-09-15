@@ -3,12 +3,15 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer';
 import 'package:intl/intl.dart';
+import 'detail_company.dart';
+import 'detail_job.dart';
 
 class ChatDetail extends StatefulWidget {
   final String chatId;
   final String userId;
   final String? companyName;
   final String? companyHandle;
+  final String? companyId;
 
   const ChatDetail({
     super.key,
@@ -16,6 +19,7 @@ class ChatDetail extends StatefulWidget {
     required this.userId,
     this.companyName,
     this.companyHandle,
+    this.companyId,
   });
 
   @override
@@ -223,7 +227,7 @@ class _ChatDetailState extends State<ChatDetail> {
                     _selectedIds.clear();
                   });
                 } else if (v == 'info') {
-                  _showInfoSheet(title, handle);
+                  _navigateToCompanyDetail();
                 }
               },
               itemBuilder: (ctx) => const [
@@ -435,26 +439,44 @@ class _ChatDetailState extends State<ChatDetail> {
     return DateFormat('dd/MM/yyyy').format(d);
   }
 
-  void _showInfoSheet(String title, String handle) {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: Theme.of(context).textTheme.titleMedium),
-              if (handle.isNotEmpty)
-                Text(handle, style: Theme.of(context).textTheme.bodySmall),
-              const SizedBox(height: 12),
-              const Text('Infos supplémentaires sur la conversation...'),
-            ],
+  void _navigateToCompanyDetail() {
+    if (widget.companyId != null && widget.companyId!.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DetailCompanyPage(
+            companyId: widget.companyId!,
+            onNavigateToDetail: (String type, {String? id}) {
+              if (type == 'job' && id != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailJobPage(
+                      jobId: id,
+                      onNavigateToDetail: (String type, {String? id}) {
+                        // Gérer la navigation si nécessaire
+                      },
+                      onBack: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                );
+              }
+            },
+            onBack: () {
+              Navigator.pop(context);
+            },
           ),
         ),
-      ),
-    );
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Informations de l\'entreprise non disponibles'),
+        ),
+      );
+    }
   }
 
   @override
