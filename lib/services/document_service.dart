@@ -11,28 +11,21 @@ class DocumentService {
       : baseUrl = baseUrl ?? 'https://document-service-one.vercel.app';
   
   Future<String?> _getAuthToken() async {
-    print('🔐 Flutter: Getting auth token...');
     final prefs = await SharedPreferences.getInstance();
     // Essaie d'abord access_token, puis token
     final token = prefs.getString('access_token') ?? prefs.getString('token');
-    print('🔐 Flutter: Token found: ${token != null ? 'YES' : 'NO'}');
-    print('🔐 Flutter: Token length: ${token?.length ?? 0}');
-    print('🔐 Flutter: Token preview: ${token != null ? '${token.substring(0, token.length > 20 ? 20 : token.length)}...' : 'NULL'}');
     return token;
   }
 
   Future<Map<String, String>> _getAuthHeaders() async {
-    print('🔐 Flutter: Building auth headers...');
     final token = await _getAuthToken();
     if (token == null) {
-      print('❌ Flutter: NO TOKEN FOUND!');
       throw Exception('No authentication token found');
     }
     final headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
     };
-    print('🔐 Flutter: Headers built: ${headers.keys.toList()}');
     return headers;
   }
 

@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import 'services/document_service.dart';
+import 'pdf_viewer_page.dart';
 
 class CVManagementScreen extends StatefulWidget {
   final String userId;
@@ -380,64 +381,122 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
                       ),
                       const SizedBox(height: 16),
                       Card(
-                        child: ListTile(
-                          leading: const Icon(Icons.description, color: Colors.blue),
-                          title: Text(_safeTitle(_currentCV!['title'], fallback: 'Mon CV')),
-                          subtitle: Text(
-                            'Uploadé le ${_formatDate(_currentCV!['uploadedAt'])}',
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Column(
                             children: [
-                              IconButton(
-                                icon: const Icon(Icons.download, color: Colors.green),
-                                onPressed: () async {
-                                  try {
-                                    setState(() { _isLoading = true; });
-                                    final String url = await _documentService.getCvDownloadUrl(widget.userId);
-                                    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-                                  } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Erreur téléchargement CV: ${_extractErrorMessage(e)}')),
-                                    );
-                                  } finally {
-                                    setState(() { _isLoading = false; });
-                                  }
-                                },
-                                tooltip: 'Télécharger',
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () async {
-                                  final confirmed = await showDialog<bool>(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('Confirmer la suppression'),
-                                      content: const Text('Supprimer votre CV actuel ?'),
-                                      actions: [
-                                        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
-                                        TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Supprimer')), 
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.description, color: Colors.blue, size: 40),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _safeTitle(_currentCV!['title'], fallback: 'Mon CV'),
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Uploadé le ${_formatDate(_currentCV!['uploadedAt'])}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
                                       ],
                                     ),
-                                  );
-                                  if (confirmed == true) {
-                                    try {
-                                      setState(() { _isLoading = true; });
-                                      await _documentService.deleteUserCv(widget.userId);
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('CV supprimé avec succès!')),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.visibility, color: Colors.blue),
+                                    onPressed: () async {
+                                      try {
+                                        setState(() { _isLoading = true; });
+                                        final String url = await _documentService.getCvDownloadUrl(widget.userId);
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => PDFViewerPage(url: url),
+                                          ),
+                                        );
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Erreur aperçu CV: ${_extractErrorMessage(e)}')),
+                                        );
+                                      } finally {
+                                        setState(() { _isLoading = false; });
+                                      }
+                                    },
+                                    tooltip: 'Aperçu',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.download, color: Colors.green),
+                                    onPressed: () async {
+                                      try {
+                                        setState(() { _isLoading = true; });
+                                        final String url = await _documentService.getCvDownloadUrl(widget.userId);
+                                        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Erreur téléchargement CV: ${_extractErrorMessage(e)}')),
+                                        );
+                                      } finally {
+                                        setState(() { _isLoading = false; });
+                                      }
+                                    },
+                                    tooltip: 'Télécharger',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () async {
+                                      final confirmed = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text('Confirmer la suppression'),
+                                          content: const Text('Supprimer votre CV actuel ?'),
+                                          actions: [
+                                            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
+                                            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Supprimer')), 
+                                          ],
+                                        ),
                                       );
-                                      _loadDocuments();
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Erreur lors de la suppression: ${_extractErrorMessage(e)}')),
-                                      );
-                                    } finally {
-                                      setState(() { _isLoading = false; });
-                                    }
-                                  }
-                                },
-                                tooltip: 'Supprimer',
+                                      if (confirmed == true) {
+                                        try {
+                                          setState(() { _isLoading = true; });
+                                          await _documentService.deleteUserCv(widget.userId);
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('CV supprimé avec succès!')),
+                                          );
+                                          _loadDocuments();
+                                        } catch (e) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Erreur lors de la suppression: ${_extractErrorMessage(e)}')),
+                                          );
+                                        } finally {
+                                          setState(() { _isLoading = false; });
+                                        }
+                                      }
+                                    },
+                                    tooltip: 'Supprimer',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
