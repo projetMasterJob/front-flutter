@@ -20,6 +20,8 @@ class _LogInScreenState extends State<LogInScreen> {
   final TextEditingController passwordController = TextEditingController();
   
   bool _isLoading = false;
+  bool _isNavigatingToSignup = false;
+  bool _isPasswordVisible = false;
   String? loginError;
 
   Future<void> loginUser(String email, String password) async {
@@ -129,137 +131,223 @@ class _LogInScreenState extends State<LogInScreen> {
   Widget build (BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 247, 247, 247),
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 40),
-            Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top,
+            ),
+            child: IntrinsicHeight(
               child: Column(
                 children: [
-                  Image.asset(
-                    './assets/images/logo.png',
-                    height: 250,
+                  const SizedBox(height: 40),
+                  Center(
+                    child: Column(
+                      children: [
+                        Image.asset(
+                          './assets/images/logo.png',
+                          height: 200,
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 10),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5F5F5),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(20),
+                      child: Form(
+                        key: _formKey,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Adresse mail',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: emailController,
+                              decoration: const InputDecoration(
+                                labelText: 'Adresse mail *',
+                                hintText: 'votre adresse mail',
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return "Veuillez entrer votre adresse mail";
+                                }
+                                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                                  return "Format d'adresse mail invalide";
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              'Mot de passe',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: passwordController,
+                              obscureText: !_isPasswordVisible,
+                              decoration: InputDecoration(
+                                labelText: 'Mot de passe *',
+                                hintText: 'votre mot de passe',
+                                border: const OutlineInputBorder(),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isPasswordVisible = !_isPasswordVisible;
+                                    });
+                                  },
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return "Veuillez entrer votre mot de passe";
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (loginError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12.0),
+                      child: Text(
+                        loginError!,
+                        style: const TextStyle(color: Colors.red, fontSize: 16),
+                      ),
+                    ),
+
+                  const SizedBox(height: 30),
+
+                  // Bouton connexion
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : () {
+                      if (_formKey.currentState!.validate()) {
+                        loginUser(
+                          emailController.text,
+                          passwordController.text,
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                "Connexion...",
+                                style: TextStyle(fontSize: 16, color: Colors.white),
+                              ),
+                            ],
+                          )
+                        : const Text(
+                            "Connexion",
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Bouton inscription
+                  ElevatedButton(
+                    onPressed: _isNavigatingToSignup ? null : () async {
+                      setState(() {
+                        _isNavigatingToSignup = true;
+                      });
+                      
+                      await Future.delayed(const Duration(milliseconds: 500));
+                      
+                      if (mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => SignInScreen()),
+                        );
+                      }
+                      
+                      setState(() {
+                        _isNavigatingToSignup = false;
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: _isNavigatingToSignup
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Text(
+                            "Inscription",
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                  ),
+
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
-            const SizedBox(height: 10),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30),
-              child: Form(
-                key: _formKey,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Adresse mail *',
-                        hintText: 'votre adresse mail',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Veuillez entrer votre adresse mail";
-                        }
-                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                          return "Format d'adresse mail invalide";
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      controller: passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Mot de passe *',
-                        hintText: 'votre mot de passe',
-                        border: OutlineInputBorder(),
-                        suffixIcon: Icon(Icons.visibility),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Veuillez entrer votre mot de passe";
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (loginError != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 12.0),
-                child: Text(
-                  loginError!,
-                  style: const TextStyle(color: Colors.red, fontSize: 16),
-                ),
-              ),
-
-            const SizedBox(height: 20),
-
-            // Bouton connexion
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  loginUser(
-                    emailController.text,
-                    passwordController.text,
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                "Connexion",
-                style: TextStyle(fontSize: 16, color: Colors.white),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Bouton inscription
-            ElevatedButton(
-              onPressed: () {
-                print("Inscription");
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SignInScreen()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                "Inscription",
-                style: TextStyle(fontSize: 16, color: Colors.white),
-              ),
-            ),
-
-            const Spacer(),
-            if (_isLoading)
-            Container(
-              color: Colors.black.withOpacity(0.5),
-              child: Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

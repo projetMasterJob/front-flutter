@@ -17,6 +17,7 @@ class TemplatePage extends StatefulWidget {
 class _TemplatePageState extends State<TemplatePage> {
   late int _selectedIndex;
   late List<Widget> _viewStack;
+  DateTime? _lastBackPressed;
   
   // Pages créées une seule fois
   late final List<Widget> _pages = [
@@ -64,6 +65,18 @@ class _TemplatePageState extends State<TemplatePage> {
       setState(() {
         _viewStack.removeLast();
       });
+      return false;
+    }
+    
+    final now = DateTime.now();
+    if (_lastBackPressed == null || now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
+      _lastBackPressed = now;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cliquez pour quitter'),
+          duration: Duration(seconds: 2),
+        ),
+      );
       return false;
     }
     return true;

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'chat_detail.dart';
 
 class DetailJobPage extends StatefulWidget {
   final String? jobId;
@@ -21,6 +22,7 @@ class _DetailJobPageState extends State<DetailJobPage> {
   Map<String, dynamic>? jobData;
   bool isLoading = true;
   String? error;
+  bool _isPostulating = false;
   final TextEditingController _motivationController = TextEditingController();
 
   @override
@@ -522,7 +524,11 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                 width: double.infinity,
                                 height: 48,
                                 child: ElevatedButton(
-                                  onPressed: () async {
+                                  onPressed: _isPostulating ? null : () async {
+                                    setState(() {
+                                      _isPostulating = true;
+                                    });
+                                    
                                     final prefs =
                                         await SharedPreferences.getInstance();
                                     final userId = prefs.getString('user_id');
@@ -549,12 +555,114 @@ class _DetailJobPageState extends State<DetailJobPage> {
 
                                         if (createPostulResponse.statusCode ==
                                             201) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                                content: Text(
-                                                    'Candidature envoyée avec succès!')),
-                                          );
+                                          final companyId = jobData?['company_id'];
+                                          if (companyId != null) {
+                                            try {
+                                              final createChatUrl = Uri.parse(
+                                                  'https://chat-service-six-red.vercel.app/api/chat/list');
+                                              final createChatData = {
+                                                'user_id': userId,
+                                                'company_id': companyId,
+                                              };
+                                              final createChatResponse =
+                                                  await http.post(
+                                                createChatUrl,
+                                                headers: {
+                                                  'Content-Type': 'application/json',
+                                                },
+                                                body: jsonEncode(createChatData),
+                                              );
+                                              
+                                              
+                                               if (createChatResponse.statusCode == 200) {
+                                                 final chatData = jsonDecode(createChatResponse.body);
+                                                 final createdChatId = chatData['id'] ?? chatData['chat_id'];
+                                                 final isExistingChat = chatData['error'] == 'Chat déjà existant';
+                                                 
+                                                 if (createdChatId != null) {
+                                                   try {
+                                                     final sendMessageUrl = Uri.parse('https://chat-service-six-red.vercel.app/api/chat/');
+                                                     final messageContent = _motivationController.text.isEmpty 
+                                                       ? 'Je suis intéressé(e) par votre offre d\'emploi.'
+                                                       : _motivationController.text;
+                                                     
+                                                     final sendMessageBody = {
+                                                       'chat_id': createdChatId,
+                                                       'sender_id': userId,
+                                                       'content': messageContent,
+                                                     };
+                                                                                             
+                                                     final sendMessageResponse = await http.post(
+                                                       sendMessageUrl,
+                                                       headers: {'Content-Type': 'application/json'},
+                                                       body: jsonEncode(sendMessageBody),
+                                                     );
+                                                                                             
+                                                     if (sendMessageResponse.statusCode == 200) {
+                                                       ScaffoldMessenger.of(context).showSnackBar(
+                                                         SnackBar(content: Text('Candidature envoyée avec succès!')),
+                                                       );
+                                                       
+                                                       Navigator.push(
+                                                         context,
+                                                         MaterialPageRoute(
+                                                           builder: (context) => ChatDetail(
+                                                             chatId: createdChatId,
+                                                             userId: userId,
+                                                           ),
+                                                         ),
+                                                       );
+                                                     } else {
+                                                       ScaffoldMessenger.of(context).showSnackBar(
+                                                         SnackBar(content: Text('Erreur lors de l\'envoi du message.')),
+                                                       );
+                                                     }
+                                                   } catch (messageError) {
+                                                     ScaffoldMessenger.of(context).showSnackBar(
+                                                       SnackBar(content: Text('Erreur lors de l\'envoi du message.')),
+                                                     );
+                                                     
+                                                     if (isExistingChat) {
+                                                       Navigator.push(
+                                                         context,
+                                                         MaterialPageRoute(
+                                                           builder: (context) => ChatDetail(
+                                                             chatId: createdChatId,
+                                                             userId: userId,
+                                                           ),
+                                                         ),
+                                                       );
+                                                     }
+                                                   }
+                                                 } else {
+                                                   ScaffoldMessenger.of(context).showSnackBar(
+                                                     SnackBar(content: Text('Erreur lors de la création de la conversation.')),
+                                                   );
+                                                 }
+                                               } else {
+                                                 ScaffoldMessenger.of(context)
+                                                     .showSnackBar(
+                                                   SnackBar(
+                                                       content: Text(
+                                                           'Candidature envoyée mais erreur lors de la création de la conversation (${createChatResponse.statusCode}).')),
+                                                 );
+                                               }
+                                            } catch (chatError) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        'Candidature envoyée mais erreur lors de la création de la conversation.')),
+                                              );
+                                            }
+                                          } else {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                  content: Text(
+                                                      'Candidature envoyée avec succès!')),
+                                            );
+                                          }
                                         } else {
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
@@ -570,11 +678,24 @@ class _DetailJobPageState extends State<DetailJobPage> {
                                               content: Text(
                                                   'Échec de l\'envoi du de la candidature.')),
                                         );
+                                      } finally {
+                                        setState(() {
+                                          _isPostulating = false;
+                                        });
                                       }
                                     }
                                   },
-                                  child: Text("Postuler",
-                                      style: TextStyle(fontSize: 16)),
+                                  child: _isPostulating
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          ),
+                                        )
+                                      : const Text("Postuler",
+                                          style: TextStyle(fontSize: 16)),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.blue[700],
                                     foregroundColor: Colors.white,

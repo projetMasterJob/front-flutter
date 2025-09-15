@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:convert';
 import 'services/document_service.dart';
 
 class CVManagementScreen extends StatefulWidget {
@@ -20,6 +21,16 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
   bool _isLoading = false;
   bool _isUploading = false;
   static const int _maxFileSizeBytes = 5 * 1024 * 1024; // 5 Mo
+
+  String _extractErrorMessage(dynamic error) {
+    final errorString = error.toString();
+    try {
+      final Map<String, dynamic> errorMap = json.decode(errorString);
+      return errorMap['message'] ?? errorMap['error'] ?? 'Erreur inconnue';
+    } catch (_) {
+      return errorString;
+    }
+  }
 
   @override
   void initState() {
@@ -46,7 +57,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors du chargement: $e')),
+        SnackBar(content: Text('Erreur lors du chargement: ${_extractErrorMessage(e)}')),
       );
     }
   }
@@ -109,7 +120,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
         await _showTooLargeDialog(null);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de l\'upload: $e')),
+          SnackBar(content: Text('Erreur lors de l\'upload: ${_extractErrorMessage(e)}')),
         );
       }
     }
@@ -199,7 +210,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
     } catch (e) {
       print('Download error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors du téléchargement: $e')),
+        SnackBar(content: Text('Erreur lors du téléchargement: ${_extractErrorMessage(e)}')),
       );
     } finally {
       setState(() {
@@ -237,7 +248,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
         _loadDocuments(); // Reload the list
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de la suppression: $e')),
+          SnackBar(content: Text('Erreur lors de la suppression: ${_extractErrorMessage(e)}')),
         );
       }
     }
@@ -338,7 +349,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
                                     await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                                   } catch (e) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Erreur téléchargement CV: $e')),
+                                      SnackBar(content: Text('Erreur téléchargement CV: ${_extractErrorMessage(e)}')),
                                     );
                                   } finally {
                                     setState(() { _isLoading = false; });
@@ -370,7 +381,7 @@ class _CVManagementScreenState extends State<CVManagementScreen> {
                                       _loadDocuments();
                                     } catch (e) {
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Erreur lors de la suppression: $e')),
+                                        SnackBar(content: Text('Erreur lors de la suppression: ${_extractErrorMessage(e)}')),
                                       );
                                     } finally {
                                       setState(() { _isLoading = false; });

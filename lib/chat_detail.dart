@@ -79,7 +79,7 @@ class _ChatDetailState extends State<ChatDetail> {
     if (content.isEmpty) return;
 
     final url = Uri.parse(
-        'https://chat-service-six-red.vercel.app/api/chat/'); // ne pas modifier
+        'https://chat-service-six-red.vercel.app/api/chat/send-message');
     final body = {
       'chat_id': widget.chatId,
       'sender_id': widget.userId,

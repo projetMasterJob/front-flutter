@@ -363,7 +363,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         suffixIcon: IconButton(
           icon: Icon(
-            showPassword ? Icons.visibility : Icons.visibility_off,
+            showPassword ? Icons.visibility_off : Icons.visibility,
             color: Colors.grey,
           ),
           onPressed: onToggle,

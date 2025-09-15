@@ -124,6 +124,27 @@ class _ListChatState extends State<ListChat> {
         jsonMap.map((k, v) => MapEntry(k.toString(), v)));
   }
 
+  Future<String?> _getLastMessage(String chatId) async {
+    try {
+      final uri = Uri.parse('$_apiBase/api/chat/$chatId');
+      final r = await http.get(uri);
+      if (r.statusCode != 200) return null;
+      
+      final List<dynamic> messages = json.decode(r.body);
+      if (messages.isEmpty) return null;
+      
+      messages.sort((a, b) {
+        final aTime = DateTime.tryParse(a['sent_at'] ?? '') ?? DateTime(1970);
+        final bTime = DateTime.tryParse(b['sent_at'] ?? '') ?? DateTime(1970);
+        return bTime.compareTo(aTime);
+      });
+      
+      return messages.first['content']?.toString();
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _refresh() async {
     if ((_userId ?? '').isEmpty) return;
     final f = _fetchChats(_userId!); // prépare le Future
@@ -228,13 +249,6 @@ class _ListChatState extends State<ListChat> {
         ),
       ),
       title: Text('Boîte de réception', style: titleStyle),
-      actions: [
-        IconButton(
-          onPressed: () {}, // paramètre: aucune action pour le moment
-          icon: const Icon(Icons.tune_rounded, color: Colors.black87),
-          tooltip: 'Paramètres',
-        ),
-      ],
     );
   }
 
@@ -331,40 +345,46 @@ class _ListChatState extends State<ListChat> {
                             : '';
                         final imageUrl = company?.imageUrl;
 
-                        return _ConversationRow(
-                          title: displayName,
-                          avatarUrl: imageUrl,
-                          lastMessage: lastMessage,
-                          updatedAt: updatedAt,
-                          unread: unread,
-                          editMode: _editMode,
-                          selected: selected,
-                          onPressed: () {
-                            if (_editMode) {
-                              _toggleSelect(chatId);
-                              return;
-                            }
-                            if ((_userId ?? '').isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text("Utilisateur introuvable")),
-                              );
-                              return;
-                            }
-                            // 👉 Navigation demandée (MaterialPageRoute → ChatDetail)
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ChatDetail(
-                                  chatId: chatId,
-                                  userId: _userId!,
-                                  companyName: displayName,
-                                  companyHandle: handle,
-                                ),
-                              ),
+                        return FutureBuilder<String?>(
+                          future: _getLastMessage(chatId),
+                          builder: (context, messageSnap) {
+                            final actualLastMessage = messageSnap.data ?? lastMessage;
+                            return _ConversationRow(
+                              title: displayName,
+                              avatarUrl: imageUrl,
+                              lastMessage: actualLastMessage,
+                              updatedAt: updatedAt,
+                              unread: unread,
+                              editMode: _editMode,
+                              selected: selected,
+                              onPressed: () {
+                                if (_editMode) {
+                                  _toggleSelect(chatId);
+                                  return;
+                                }
+                                if ((_userId ?? '').isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text("Utilisateur introuvable")),
+                                  );
+                                  return;
+                                }
+                                // 👉 Navigation demandée (MaterialPageRoute → ChatDetail)
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ChatDetail(
+                                      chatId: chatId,
+                                      userId: _userId!,
+                                      companyName: displayName,
+                                      companyHandle: handle,
+                                    ),
+                                  ),
+                                );
+                              },
+                              onChanged: (v) => _toggleSelect(chatId),
                             );
                           },
-                          onChanged: (v) => _toggleSelect(chatId),
                         );
                       },
                     );
