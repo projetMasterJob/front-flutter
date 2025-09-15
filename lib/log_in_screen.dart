@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:front_flutter/sign_in_screen.dart';
-// import 'home_tab.dart';
 import 'template.dart';
 import 'dashboard_pro.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,6 +11,57 @@ class LogInScreen extends StatefulWidget {
   const LogInScreen({super.key});
   @override
   _LogInScreenState createState() => _LogInScreenState();
+
+  static Future<bool> checkAutoLogin(BuildContext context) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final knowme = prefs.getBool('knowme') ?? false;
+      
+      if (knowme) {
+        final email = prefs.getString('saved_email');
+        final password = prefs.getString('saved_password');
+        
+        if (email != null && password != null) {
+          final response = await http.post(
+            Uri.parse('https://auth-service-kohl.vercel.app/api/auth/login'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email, 'password': password}),
+          );
+
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            final accessToken = data['accessToken'];
+
+            if (accessToken != null) {
+              final decodedToken = JwtDecoder.decode(accessToken);
+              final prefs = await SharedPreferences.getInstance();
+              
+              await prefs.setString('access_token', accessToken);
+              await prefs.setString('token', accessToken);
+              await prefs.setString('user_id', decodedToken['id'].toString());
+
+              final role = decodedToken['role']?.toString().toLowerCase();
+              if (role == 'pro') {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CompanyDashboardPage()),
+                );
+              } else {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => TemplatePage(selectedIndex: 0)),
+                );
+              }
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
 }
 
 class _LogInScreenState extends State<LogInScreen> {
@@ -22,6 +72,7 @@ class _LogInScreenState extends State<LogInScreen> {
   bool _isLoading = false;
   bool _isNavigatingToSignup = false;
   bool _isPasswordVisible = false;
+  bool _rememberMe = false;
   String? loginError;
 
   Future<void> loginUser(String email, String password) async {
@@ -45,6 +96,9 @@ class _LogInScreenState extends State<LogInScreen> {
           try {
             final decodedToken = JwtDecoder.decode(accessToken);
             await _saveUserData(accessToken, decodedToken);
+            if (_rememberMe) {
+              await _saveCredentials(email, password);
+            }
             await getUserLoginInfos(decodedToken['id'].toString());
 
             final role = decodedToken['role']?.toString().toLowerCase();
@@ -95,6 +149,17 @@ class _LogInScreenState extends State<LogInScreen> {
       final userId = decodedToken['id'].toString();
       await prefs.setString('user_id', userId);
 
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  Future<void> _saveCredentials(String email, String password) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('knowme', true);
+      await prefs.setString('saved_email', email);
+      await prefs.setString('saved_password', password);
     } catch (e) {
       throw e;
     }
@@ -240,6 +305,23 @@ class _LogInScreenState extends State<LogInScreen> {
                                 }
                                 return null;
                               },
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Checkbox(
+                                  value: _rememberMe,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _rememberMe = value ?? false;
+                                    });
+                                  },
+                                ),
+                                const Text(
+                                  'Se souvenir de moi',
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                              ],
                             ),
                           ],
                         ),
