@@ -593,6 +593,7 @@ class _DetailJobPageState extends State<DetailJobPage> {
     );
   }
 
+
   Widget _buildError(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments;
     String? jobId = widget.jobId;
