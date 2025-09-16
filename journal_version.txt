@@ -1,3 +1,6 @@
+Version 1.1.0
+Description : Ajout du dashboard entreprise, de l'import des CV et du template des issues
+
 Version 1.0.2
 Description : affichage des informations du destinataire dans la liste des discussions et optimisations diverses
 
