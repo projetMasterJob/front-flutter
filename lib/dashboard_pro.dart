@@ -262,9 +262,7 @@ class _CompanyDashboardPageState extends State<CompanyDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader("Informations de l’entreprise", "Modifier", () {
-            // TODO: action modifier
-          }),
+          Text("Informations de l'entreprise", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
           const SizedBox(height: 12),
           _infoLine("Adresse", address),
           _infoLine("Téléphone", phone),
